@@ -33,7 +33,7 @@ import source_code
 prompt = "g++> "
 compiler_command = ( "g++", "-x", "c++", "-o", "$outfile", "-" )
 
-incl_re = re.compile( r"\s*#include\s" )
+incl_re = re.compile( r"\s*#\s*include\s" )
 
 #---------------
 

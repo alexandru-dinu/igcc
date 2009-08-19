@@ -159,19 +159,19 @@ g++>
 
 def test_multiple_repeated_includes():
 	commands = [
-		'#include <vector>',
+		'  #  include   <vector> ',
 		'std::vector<int> vec;',
 		'#include <iostream>',
-		'#include <vector>',
+		' #   include   <vector>',
 		'#include <iostream>',
 		'using namespace std;',
 		'cout << vec.size() << std::endl;' ]
 
 	expected_output = (
-r'''g++> #include <vector>
+r'''g++>   #  include   <vector> 
 g++> std::vector<int> vec;
 g++> #include <iostream>
-g++> #include <vector>
+g++>  #   include   <vector>
 g++> #include <iostream>
 g++> using namespace std;
 g++> cout << vec.size() << std::endl;
@@ -201,6 +201,7 @@ def main():
 	#test_undo();
 	#test_edit_in_vim();
 	#test_compile_warning()
+	#test_remove_compile_error_message()
 
 	print "All tests passed."
 
