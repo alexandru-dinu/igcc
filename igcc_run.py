@@ -72,6 +72,7 @@ def do_run( inputfile, exefilename ):
 
 	inp = 1
 	user_commands = ""
+	output_chars_printed = 0
 	while inp is not None:
 		inp = read_line()
 		if inp is not None:
@@ -80,8 +81,10 @@ def do_run( inputfile, exefilename ):
 			run_compile( subs_compiler_command, user_commands )
 			stdoutdata, stderrdata = run_exe( exefilename )
 
-			if len( stdoutdata ) > 0:
-				print stdoutdata,
+			if len( stdoutdata ) > output_chars_printed:
+				new_output = stdoutdata[output_chars_printed:]
+				print new_output,
+				output_chars_printed += len( new_output )
 
 	print
 

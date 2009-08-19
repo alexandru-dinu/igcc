@@ -57,10 +57,30 @@ g++>
 
 	run_program( commands, expected_output )
 
+
+def test_print_twice():
+	commands = [ "int a = 10;",
+		'printf( "%d\\n", a );',
+		"++a;",
+		'printf( "%d\\n", a );' ]
+
+	expected_output = (
+'''g++> int a = 10;
+g++> printf( "%d\\n", a );
+10
+g++> ++a;
+g++> printf( "%d\\n", a );
+11
+g++> 
+''' )
+
+	run_program( commands, expected_output )
+
 def main():
 	test_declare_var()
 	test_declare_var_assign()
 	test_declare_and_assign_var_then_print()
+	test_print_twice()
 
 	print "All tests passed."
 
