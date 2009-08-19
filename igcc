@@ -1,0 +1,7 @@
+#!/usr/bin/python
+
+import igcc_run
+
+if __name__ == "__main__":
+	igcc_run.run()
+

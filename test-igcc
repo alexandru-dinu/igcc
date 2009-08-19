@@ -1,0 +1,71 @@
+#!/usr/bin/python
+
+import igcc_run
+
+class FakeWriteableFile:
+	def __init__( self ):
+		self.lines = []
+
+	def write( self, line ):
+		self.lines.append( line )
+
+class FakeReadableFile:
+	def __init__( self, lines ):
+		self.lines = lines
+
+	def readline( self ):
+		if len( self.lines ) == 0:
+			return None
+		line = self.lines[0]
+		self.lines = self.lines[1:]
+		return line + "\n"
+
+def assert_strings_equal( str1, str2 ):
+	if str1 == str2:
+		return
+
+	raise AssertionError( "\n" + str1 + "\n!=\n" + str2 )
+
+def run_program( commands, expected_output ):
+
+	outputfile = FakeWriteableFile()
+	stdinfile = FakeReadableFile( commands )
+	igcc_run.run( outputfile, stdinfile )
+
+	assert_strings_equal( "".join( outputfile.lines ), expected_output )
+
+def test_declare_var():
+	commands = [ "int a;" ]
+	expected_output = 'g++> int a;\ng++> \n'
+	run_program( commands, expected_output )
+
+def test_declare_var_assign():
+	commands = [ "int a;", "a = 10;" ]
+	expected_output = 'g++> int a;\ng++> a = 10;\ng++> \n'
+	run_program( commands, expected_output )
+
+def test_declare_and_assign_var_then_print():
+	commands = [ "int a = 10;",
+		'printf( "%d\\n", a );' ]
+
+	expected_output = (
+'''g++> int a = 10;
+g++> printf( "%d\\n", a );
+10
+g++> 
+''' )
+
+	run_program( commands, expected_output )
+
+def main():
+	test_declare_var()
+	test_declare_var_assign()
+	test_declare_and_assign_var_then_print()
+
+	print "All tests passed."
+
+
+if __name__ == "__main__":
+	main()
+
+
