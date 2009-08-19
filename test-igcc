@@ -2,7 +2,7 @@
 
 import re
 
-import igcc_run
+import libigcc.run
 
 class FakeWriteableFile:
 	def __init__( self ):
@@ -41,14 +41,14 @@ def run_program( commands, expected_output ):
 
 	outputfile = FakeWriteableFile()
 	stdinfile = FakeReadableFile( commands )
-	igcc_run.run( outputfile, stdinfile )
+	libigcc.run.run( outputfile, stdinfile )
 
 	assert_strings_equal( "".join( outputfile.lines ), expected_output )
 
 def run_program_regex_output( commands, expected_output_re ):
 	outputfile = FakeWriteableFile()
 	stdinfile = FakeReadableFile( commands )
-	igcc_run.run( outputfile, stdinfile )
+	libigcc.run.run( outputfile, stdinfile )
 
 	assert_strings_match( "".join( outputfile.lines ), expected_output_re )
 
@@ -171,6 +171,16 @@ def main():
 	test_compile_error_display()
 	test_include()
 	test_multiple_repeated_includes()
+
+	# Should pass
+	#test_list_program()
+	#test_list_full_program()
+	#test_help_message();
+
+	# Will fail atm
+	#test_quit()
+	#test_undo();
+	#test_edit_in_vim();
 	#test_compile_warning()
 
 	print "All tests passed."
