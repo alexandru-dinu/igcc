@@ -112,15 +112,14 @@ def do_run( inputfile, exefilename ):
 				print compile_error,
 			else:
 				if incl_re.match( inp ):
-					user_includes += inp
+					user_includes += inp + "\n"
 				else:
-					user_commands += inp
+					user_commands += inp + "\n"
 
 				compile_error = run_compile( subs_compiler_command,
 					user_commands, user_includes )
 	
 				if compile_error is not None:
-					#print compile_error
 					print "[Compile error - type .e to see it.]"
 				else:
 					stdoutdata, stderrdata = run_exe( exefilename )
