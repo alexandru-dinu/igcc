@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+import re
+
 import igcc_run
 
 class FakeWriteableFile:
@@ -18,13 +20,22 @@ class FakeReadableFile:
 			return None
 		line = self.lines[0]
 		self.lines = self.lines[1:]
-		return line + "\n"
+		return line
 
 def assert_strings_equal( str1, str2 ):
 	if str1 == str2:
 		return
 
 	raise AssertionError( "\n" + str1 + "\n!=\n" + str2 )
+
+def assert_strings_match( string, re_string ):
+	cmp_re = re.compile( re_string, re.DOTALL )
+
+	if cmp_re.match( string ):
+		return
+
+	raise AssertionError( "\n" + string
+		+ "\ndoes not match regular expression\n" + re_string )
 
 def run_program( commands, expected_output ):
 
@@ -33,6 +44,13 @@ def run_program( commands, expected_output ):
 	igcc_run.run( outputfile, stdinfile )
 
 	assert_strings_equal( "".join( outputfile.lines ), expected_output )
+
+def run_program_regex_output( commands, expected_output_re ):
+	outputfile = FakeWriteableFile()
+	stdinfile = FakeReadableFile( commands )
+	igcc_run.run( outputfile, stdinfile )
+
+	assert_strings_match( "".join( outputfile.lines ), expected_output_re )
 
 def test_declare_var():
 	commands = [ "int a;" ]
@@ -76,11 +94,59 @@ g++>
 
 	run_program( commands, expected_output )
 
+def test_compile_error():
+	commands = [ "int a" ] # no semicolon
+
+	expected_output = (
+'''g++> int a
+[Compile error - type .e to see it.]
+g++> 
+''' )
+
+	run_program( commands, expected_output )
+
+def test_compile_error_display():
+	commands = [
+		"int a", # no semicolon
+		".e" ]
+
+	# Just look for a string "xpected" in the compiler output.
+	expected_output_re = (
+'''g\+\+\> int a
+\[Compile error - type .e to see it\.\]
+g\+\+\> \.e
+.*xpected.*
+g\+\+\> 
+$''' )
+
+	run_program_regex_output( commands, expected_output_re )
+
+
+def test_include():
+	commands = [
+		'#include <vector>',
+		'std::vector<int> vec;',
+		r'printf( "%d\n", vec.size() );' ]
+
+	expected_output = (
+r'''g++> #include <vector>
+g++> std::vector<int> vec;
+g++> printf( "%d\n", vec.size() );
+0
+g++> 
+''' )
+
+	run_program( commands, expected_output )
+
+
 def main():
 	test_declare_var()
 	test_declare_var_assign()
 	test_declare_and_assign_var_then_print()
 	test_print_twice()
+	test_compile_error()
+	test_compile_error_display()
+	test_include()
 
 	print "All tests passed."
 
