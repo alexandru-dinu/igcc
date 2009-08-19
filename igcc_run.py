@@ -1,5 +1,3 @@
-#!/usr/bin/python
-
 import code
 import os
 import os.path
@@ -8,28 +6,15 @@ import subprocess
 import sys
 import tempfile
 
+import dot_commands
+import source_code
+
 # --------------
 
 prompt = "g++> "
 compiler_command = ( "g++", "-x", "c++", "-o", "$outfile", "-" )
 
 incl_re = re.compile( r"\s*#include\s" )
-
-file_boilerplate = """
-
-#include <cstdio>
-#include <iostream>
-#include <string>
-
-$user_includes
-
-using namespace std;
-
-int main( char*& argv, int argc )
-{
-	$user_commands
-}
-"""
 
 #---------------
 
@@ -64,17 +49,12 @@ def get_compiler_command( outfilename ):
 	return tuple( part.replace( "$outfile", outfilename ) for
 		part in compiler_command )
 
-def get_full_source( user_commands, user_includes ):
-	return ( file_boilerplate
-		.replace( "$user_commands", user_commands )
-		.replace( "$user_includes", user_includes )
-		)
 
 def run_compile( subs_compiler_command, user_commands, user_includes ):
 	compile_process = subprocess.Popen( subs_compiler_command,
 		stdin = subprocess.PIPE, stderr = subprocess.PIPE )
 	stdoutdata, stderrdata = compile_process.communicate(
-		get_full_source( user_commands, user_includes ) )
+		source_code.get_full_source( user_commands, user_includes ) )
 
 	if compile_process.returncode == 0:
 		return None
@@ -108,9 +88,8 @@ def do_run( inputfile, exefilename ):
 		inp = read_line()
 		if inp is not None:
 
-			if inp == ".e":
-				print compile_error,
-			else:
+			if not dot_commands.process( inp, user_commands, user_includes,
+					compile_error ):
 				if incl_re.match( inp ):
 					user_includes += inp + "\n"
 				else:
