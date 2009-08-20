@@ -22,6 +22,7 @@
 import re
 
 import libigcc.run
+import libigcc.source_code
 
 class FakeWriteableFile:
 	def __init__( self ):
@@ -181,6 +182,47 @@ g++>
 
 	run_program( commands, expected_output )
 
+def test_list_program():
+	commands = [
+		'int a;',
+		'a += 2;',
+		'#include <vector>',
+		'.l' ]
+
+	expected_output = (
+r'''g++> int a;
+g++> a += 2;
+g++> #include <vector>
+g++> .l
+#include <vector>
+
+int a;
+a += 2;
+
+g++> 
+''' )
+
+	run_program( commands, expected_output )
+
+def test_list_full_program():
+	commands = [
+		'int a;',
+		'a += 2;',
+		'#include <vector>',
+		'.L' ]
+
+	expected_output = (
+'''g++> int a;
+g++> a += 2;
+g++> #include <vector>
+g++> .L
+%s
+g++> 
+''' % libigcc.source_code.get_full_source( 'int a;\na += 2;\n',
+		"#include <vector>\n" ) )
+
+	run_program( commands, expected_output )
+
 def main():
 	test_declare_var()
 	test_declare_var_assign()
@@ -192,8 +234,8 @@ def main():
 	test_multiple_repeated_includes()
 
 	# Should pass
-	#test_list_program()
-	#test_list_full_program()
+	test_list_program()
+	test_list_full_program()
 	#test_help_message();
 
 	# Will fail atm
