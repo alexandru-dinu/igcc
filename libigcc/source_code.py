@@ -26,6 +26,8 @@ using namespace std;
 int main()
 {
 	$user_commands
+
+	return 0;
 }
 """
 
