@@ -23,6 +23,7 @@ import re
 
 import libigcc.run
 import libigcc.source_code
+import libigcc.version
 
 class FakeWriteableFile:
 	def __init__( self ):
@@ -57,18 +58,20 @@ def assert_strings_match( string, re_string ):
 	raise AssertionError( "\n" + string
 		+ "\ndoes not match regular expression\n" + re_string )
 
-def run_program( commands, expected_output ):
+def run_program( commands, expected_output, print_welcome = False ):
 
 	outputfile = FakeWriteableFile()
 	stdinfile = FakeReadableFile( commands )
-	libigcc.run.run( outputfile, stdinfile )
+	ret = libigcc.run.run( outputfile, stdinfile, print_welcome )
 
 	assert_strings_equal( "".join( outputfile.lines ), expected_output )
+
+	return ret
 
 def run_program_regex_output( commands, expected_output_re ):
 	outputfile = FakeWriteableFile()
 	stdinfile = FakeReadableFile( commands )
-	libigcc.run.run( outputfile, stdinfile )
+	libigcc.run.run( outputfile, stdinfile, False )
 
 	assert_strings_match( "".join( outputfile.lines ), expected_output_re )
 
@@ -135,7 +138,7 @@ def test_compile_error_display():
 '''g\+\+\> int a
 \[Compile error - type .e to see it\.\]
 g\+\+\> \.e
-.*xpected.*
+.*error:.*
 g\+\+\> 
 $''' )
 
@@ -223,6 +226,37 @@ g++>
 
 	run_program( commands, expected_output )
 
+def test_help_message():
+	commands = [
+		'.h' ]
+
+	expected_output_re = ".*Show this help message"
+
+	run_program_regex_output( commands, expected_output_re )
+
+def test_quit():
+	commands = [
+		'.q' ]
+
+	expected_output = "g++> .q\n"
+
+	ret = run_program( commands, expected_output )
+
+	assert_strings_equal( ret, "quit" )
+
+def test_welcome_message():
+	commands = []
+	expected_output = (
+'''igcc $version
+Released under GNU GPL version 2 or later, with NO WARRANTY.
+Type ".h" for help.
+
+g++> 
+''' ).replace( "$version", libigcc.version.VERSION )
+
+	run_program( commands, expected_output, True )
+
+
 def main():
 	test_declare_var()
 	test_declare_var_assign()
@@ -232,14 +266,12 @@ def main():
 	test_compile_error_display()
 	test_include()
 	test_multiple_repeated_includes()
-
-	# Should pass
 	test_list_program()
 	test_list_full_program()
-	#test_help_message();
+	test_help_message();
+	test_quit()
+	test_welcome_message()
 
-	# Will fail atm
-	#test_quit()
 	#test_undo();
 	#test_edit_in_vim();
 	#test_compile_warning()

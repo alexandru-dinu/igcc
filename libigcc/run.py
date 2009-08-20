@@ -27,6 +27,7 @@ import tempfile
 
 import dot_commands
 import source_code
+import version
 
 # --------------
 
@@ -36,7 +37,6 @@ compiler_command = ( "g++", "-x", "c++", "-o", "$outfile", "-" )
 incl_re = re.compile( r"\s*#\s*include\s" )
 
 #---------------
-
 
 def read_line_from_stdin( ic, prompt ):
 	try:
@@ -93,6 +93,12 @@ def run_exe( exefilename ):
 	run_process = subprocess.Popen( exefilename, stdout = subprocess.PIPE )
 	return run_process.communicate()
 
+def print_welcome():
+	print '''igcc $version
+Released under GNU GPL version 2 or later, with NO WARRANTY.
+Type ".h" for help.
+'''.replace( "$version", version.VERSION )
+
 def do_run( inputfile, exefilename ):
 	read_line = create_read_line_function( inputfile, prompt )
 
@@ -129,20 +135,25 @@ def do_run( inputfile, exefilename ):
 
 	print
 
-def run( outputfile = sys.stdout, inputfile = None ):
+def run( outputfile = sys.stdout, inputfile = None, print_welc = True ):
 
 	# TODO: replace try...finally with a "with" statement
 	real_sys_stdout = sys.stdout
 	sys.stdout = outputfile
 
-	exefilename = get_temporary_file_name()
-
 	try:
+		exefilename = get_temporary_file_name()
+		ret = "normal"
+		if print_welc:
+			print_welcome()
 		do_run( inputfile, exefilename )
+	except dot_commands.IGCCQuitException:
+		ret = "quit"
 	finally:
 		sys.stdout = real_sys_stdout
 
 		if os.path.isfile( exefilename ):
 			os.remove( exefilename )
 
+	return ret
 
