@@ -17,10 +17,10 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA 02110-1301, USA.
 
-import code
 import os
 import os.path
 import re
+import readline
 import subprocess
 import sys
 import tempfile
@@ -48,9 +48,9 @@ incl_re = re.compile( r"\s*#\s*include\s" )
 
 #---------------
 
-def read_line_from_stdin( ic, prompt ):
+def read_line_from_stdin( prompt ):
 	try:
-		return ic.raw_input( prompt )
+		return raw_input( prompt )
 	except EOFError:
 		return None
 
@@ -63,8 +63,7 @@ def read_line_from_file( inputfile, prompt ):
 
 def create_read_line_function( inputfile, prompt ):
 	if inputfile is None:
-		ic = code.InteractiveConsole()
-		return lambda: read_line_from_stdin( ic, prompt )
+		return lambda: read_line_from_stdin( prompt )
 	else:
 		return lambda: read_line_from_file( inputfile, prompt )
 
