@@ -1,0 +1,24 @@
+#!/bin/bash
+
+function test_lib_dir()
+{
+    cd test/cpp && \
+    g++ -o mylib.o -c mylib.cpp && \
+    ar rc libmylib.a mylib.o && \
+    ranlib libmylib.a && \
+
+    cd ../.. && \
+
+    echo -e '#include "mylib.h"\ndefined_in_cpp();' | ./igcc -Itest/cpp -Ltest/cpp -lmylib | grep "defined_in_cpp saying hello" > /dev/null
+
+    RETVAL=$?
+
+    if [[ $RETVAL != 0 ]]; then
+    {
+        echo "test_lib_dir failed."
+        exit 1
+    }; fi
+}
+
+test_lib_dir && echo "All slow tests passed." && ./test-igcc
+

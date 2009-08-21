@@ -294,6 +294,24 @@ g++>
 	run_program( commands, expected_output, argv = argv )
 
 
+def test_lib():
+	commands = [ '#include "math.h"',
+		'int a = max( 4, 6 );',
+		r'printf( "%d\n", a );', ]
+
+	expected_output = (
+r'''g++> #include "math.h"
+g++> int a = max( 4, 6 );
+g++> printf( "%d\n", a );
+6
+g++> 
+''' )
+
+	argv = [ "-lm" ]
+
+	run_program( commands, expected_output, argv = argv )
+
+
 
 
 
@@ -313,6 +331,7 @@ def main():
 	test_welcome_message()
 	test_include_dir_on_cmd_line()
 	test_2_include_dirs_on_cmd_line()
+	test_lib()
 
 	#test_undo();
 	#test_edit_in_vim();

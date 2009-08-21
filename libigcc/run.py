@@ -32,11 +32,17 @@ import version
 
 # --------------
 
-prompt = "g++> "
-compiler_command = ( "g++", "-x", "c++", "$include_dirs",
-	"-o", "$outfile", "-" )
+# One day these will be in a config file
 
-include_command = ( "-I", "$include_dir" )
+prompt = "g++> "
+compiler_command = ( "g++", "-x", "c++", "-o", "$outfile", "-",
+	"$include_dirs", "$lib_dirs", "$libs" )
+
+include_dir_command = ( "-I$cmd", )
+lib_dir_command = ( "-L$cmd", )
+lib_command = ( "-l$cmd", )
+
+#---------------
 
 incl_re = re.compile( r"\s*#\s*include\s" )
 
@@ -68,21 +74,29 @@ def get_temporary_file_name():
 	outfile.close()
 	return outfilename
 
+def append_multiple( single_cmd, cmdlist, ret ):
+	if cmdlist is not None:
+		for cmd in cmdlist:
+			for cmd_part in single_cmd:
+				ret.append(
+					cmd_part.replace( "$cmd" , cmd ) )
+
 def get_compiler_command( options, outfilename ):
 	ret = []
 	for part in compiler_command:
 		if part == "$include_dirs":
-			if options.DIR is not None:
-				for incl_dir in options.DIR:
-					for incl_part in include_command:
-						ret.append(
-							incl_part.replace( "$include_dir" , incl_dir ) )
+			append_multiple( include_dir_command, options.INCLUDE, ret )
+		elif part == "$lib_dirs":
+			append_multiple( lib_dir_command, options.LIBDIR,ret )
+		elif part == "$libs":
+			append_multiple( lib_command, options.LIB, ret )
 		else:
 			ret.append( part.replace( "$outfile", outfilename ) )
 	return ret
 
 
 def run_compile( subs_compiler_command, user_commands, user_includes ):
+	#print "$ " + ( " ".join( subs_compiler_command ) )
 	compile_process = subprocess.Popen( subs_compiler_command,
 		stdin = subprocess.PIPE, stderr = subprocess.PIPE )
 	stdoutdata, stderrdata = compile_process.communicate(
@@ -151,9 +165,14 @@ def do_run( options, inputfile, exefilename ):
 def parse_args( argv ):
 	parser = OptionParser( version="igcc " + version.VERSION )
 			
-	parser.add_option( "-I", "", dest="DIR", action="append",
-		help = "Add the directory DIR to the list of directories to " +
+	parser.add_option( "-I", "", dest="INCLUDE", action="append",
+		help = "Add INCLUDE to the list of directories to " +
 			"be searched for header files." )
+	parser.add_option( "-L", "", dest="LIBDIR", action="append",
+		help = "Add LIBDIR to the list of directories to " +
+			"be searched for library files." )
+	parser.add_option( "-l", "", dest="LIB", action="append",
+		help = "Search the library LIB when linking." )
 		
 	(options, args) = parser.parse_args( argv )
 
