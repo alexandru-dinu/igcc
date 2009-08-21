@@ -359,6 +359,8 @@ def main():
 	test_print_license()
 	test_print_warranty()
 
+	#test_readline_history();
+	#test_print_command();
 	#test_undo();
 	#test_edit_in_vim();
 	#test_compile_warning()
