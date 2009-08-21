@@ -18,9 +18,13 @@
 # MA 02110-1301, USA.
 
 import source_code
+import copying
 
 class IGCCQuitException:
 	pass
+
+def dot_c( user_commands, user_includes, compile_error ):
+	print copying.copying
 
 def dot_e( user_commands, user_includes, compile_error ):
 	print compile_error,
@@ -34,12 +38,17 @@ def dot_l( user_commands, user_includes, compile_error ):
 def dot_L( user_commands, user_includes, compile_error ):
 	print source_code.get_full_source( user_commands, user_includes )
 
+def dot_w( user_commands, user_includes, compile_error ):
+	print copying.warranty
+
 dot_commands = {
+	".c" : ( "Show copying information", dot_c ),
 	".e" : ( "Show the last compile errors/warnings", dot_e ),
 	".h" : ( "Show this help message", None ),
 	".q" : ( "Quit", dot_q ),
 	".l" : ( "List the code you have entered", dot_l ),
 	".L" : ( "List the whole program as given to the compiler", dot_L ),
+	".w" : ( "Show warranty information", dot_w ),
 	}
 
 def case_insensitive_string_compare( str1, str2 ):

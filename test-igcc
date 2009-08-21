@@ -312,6 +312,30 @@ g++>
 	run_program( commands, expected_output, argv = argv )
 
 
+def test_print_license():
+	commands = [ '.c' ]
+
+	expected_output_re = (
+r'''g\+\+\> \.c
+.*GNU GENERAL PUBLIC LICENSE.*
+g\+\+\> 
+''' )
+
+	run_program_regex_output( commands, expected_output_re )
+
+
+
+def test_print_warranty():
+	commands = [ '.w' ]
+
+	expected_output_re = (
+r'''g\+\+\> \.w
+.*Disclaimer of Warranty.*
+g\+\+\> 
+''' )
+
+	run_program_regex_output( commands, expected_output_re )
+
 
 
 
@@ -332,6 +356,8 @@ def main():
 	test_include_dir_on_cmd_line()
 	test_2_include_dirs_on_cmd_line()
 	test_lib()
+	test_print_license()
+	test_print_warranty()
 
 	#test_undo();
 	#test_edit_in_vim();
