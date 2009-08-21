@@ -58,11 +58,12 @@ def assert_strings_match( string, re_string ):
 	raise AssertionError( "\n" + string
 		+ "\ndoes not match regular expression\n" + re_string )
 
-def run_program( commands, expected_output, print_welcome = False ):
+def run_program( commands, expected_output, print_welcome = False,
+		argv = None ):
 
 	outputfile = FakeWriteableFile()
 	stdinfile = FakeReadableFile( commands )
-	ret = libigcc.run.run( outputfile, stdinfile, print_welcome )
+	ret = libigcc.run.run( outputfile, stdinfile, print_welcome, argv )
 
 	assert_strings_equal( "".join( outputfile.lines ), expected_output )
 
@@ -256,6 +257,45 @@ g++>
 
 	run_program( commands, expected_output, True )
 
+def test_include_dir_on_cmd_line():
+	commands = [ '#include "hello.h"',
+		'hello();' ]
+
+	expected_output = (
+'''g++> #include "hello.h"
+g++> hello();
+Hello, 
+g++> 
+''' )
+
+	argv = [ "-I", "test/cpp" ]
+
+	run_program( commands, expected_output, argv = argv )
+
+
+def test_2_include_dirs_on_cmd_line():
+	commands = [ '#include "hello.h"',
+		'hello();',
+		'#include "world.h"',
+		'world();', ]
+
+	expected_output = (
+'''g++> #include "hello.h"
+g++> hello();
+Hello, 
+g++> #include "world.h"
+g++> world();
+world!
+g++> 
+''' )
+
+	argv = [ "-I", "test/cpp", "-I", "test/cpp2" ]
+
+	run_program( commands, expected_output, argv = argv )
+
+
+
+
 
 def main():
 	test_declare_var()
@@ -271,6 +311,8 @@ def main():
 	test_help_message();
 	test_quit()
 	test_welcome_message()
+	test_include_dir_on_cmd_line()
+	test_2_include_dirs_on_cmd_line()
 
 	#test_undo();
 	#test_edit_in_vim();

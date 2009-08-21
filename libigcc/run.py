@@ -24,6 +24,7 @@ import re
 import subprocess
 import sys
 import tempfile
+from optparse import OptionParser
 
 import dot_commands
 import source_code
@@ -32,7 +33,10 @@ import version
 # --------------
 
 prompt = "g++> "
-compiler_command = ( "g++", "-x", "c++", "-o", "$outfile", "-" )
+compiler_command = ( "g++", "-x", "c++", "$include_dirs",
+	"-o", "$outfile", "-" )
+
+include_command = ( "-I", "$include_dir" )
 
 incl_re = re.compile( r"\s*#\s*include\s" )
 
@@ -64,9 +68,18 @@ def get_temporary_file_name():
 	outfile.close()
 	return outfilename
 
-def get_compiler_command( outfilename ):
-	return tuple( part.replace( "$outfile", outfilename ) for
-		part in compiler_command )
+def get_compiler_command( options, outfilename ):
+	ret = []
+	for part in compiler_command:
+		if part == "$include_dirs":
+			if options.DIR is not None:
+				for incl_dir in options.DIR:
+					for incl_part in include_command:
+						ret.append(
+							incl_part.replace( "$include_dir" , incl_dir ) )
+		else:
+			ret.append( part.replace( "$outfile", outfilename ) )
+	return ret
 
 
 def run_compile( subs_compiler_command, user_commands, user_includes ):
@@ -99,10 +112,10 @@ Released under GNU GPL version 2 or later, with NO WARRANTY.
 Type ".h" for help.
 '''.replace( "$version", version.VERSION )
 
-def do_run( inputfile, exefilename ):
+def do_run( options, inputfile, exefilename ):
 	read_line = create_read_line_function( inputfile, prompt )
 
-	subs_compiler_command = get_compiler_command( exefilename )
+	subs_compiler_command = get_compiler_command( options, exefilename )
 
 	inp = 1
 	user_commands = ""
@@ -135,18 +148,38 @@ def do_run( inputfile, exefilename ):
 
 	print
 
-def run( outputfile = sys.stdout, inputfile = None, print_welc = True ):
+def parse_args( argv ):
+	parser = OptionParser( version="igcc " + version.VERSION )
+			
+	parser.add_option( "-I", "", dest="DIR", action="append",
+		help = "Add the directory DIR to the list of directories to " +
+			"be searched for header files." )
+		
+	(options, args) = parser.parse_args( argv )
+
+	if len( args ) > 0:
+		parser.error( "Unrecognised arguments :" +
+			" ".join( arg for arg in args ) )
+
+	return options
+
+def run( outputfile = sys.stdout, inputfile = None, print_welc = True,
+		argv = None ):
 
 	# TODO: replace try...finally with a "with" statement
 	real_sys_stdout = sys.stdout
 	sys.stdout = outputfile
 
+	exefilename = ""
+
 	try:
+		options = parse_args( argv )
+
 		exefilename = get_temporary_file_name()
 		ret = "normal"
 		if print_welc:
 			print_welcome()
-		do_run( inputfile, exefilename )
+		do_run( options, inputfile, exefilename )
 	except dot_commands.IGCCQuitException:
 		ret = "quit"
 	finally:
