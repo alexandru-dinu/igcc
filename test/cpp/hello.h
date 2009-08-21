@@ -17,9 +17,15 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 // MA 02110-1301, USA.
 
+#ifndef HELLO_H
+#define HELLO_H
+
 #include <iostream>
 
 void hello()
 {
     std::cout << "Hello, " << std::endl;
 }
+
+#endif // HELLO_H
+
