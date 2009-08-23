@@ -23,22 +23,25 @@ import copying
 class IGCCQuitException:
 	pass
 
-def dot_c( user_commands, user_includes, compile_error ):
+def dot_c( runner ):
 	print copying.copying
 
-def dot_e( user_commands, user_includes, compile_error ):
-	print compile_error,
+def dot_e( runner ):
+	print runner.compile_error,
 
-def dot_q( user_commands, user_includes, compile_error ):
+def dot_q( runner ):
 	raise IGCCQuitException()
 
-def dot_l( user_commands, user_includes, compile_error ):
-	print "%s\n%s" % ( user_includes, user_commands )
+def dot_l( runner ):
+	print "%s\n%s" % ( runner.user_includes, runner.user_commands )
 
-def dot_L( user_commands, user_includes, compile_error ):
-	print source_code.get_full_source( user_commands, user_includes )
+def dot_L( runner ):
+	print source_code.get_full_source( runner.user_commands, runner.user_includes )
 
-def dot_w( user_commands, user_includes, compile_error ):
+def dot_u( runner ):
+	pass
+
+def dot_w( runner ):
 	print copying.warranty
 
 dot_commands = {
@@ -48,24 +51,25 @@ dot_commands = {
 	".q" : ( "Quit", dot_q ),
 	".l" : ( "List the code you have entered", dot_l ),
 	".L" : ( "List the whole program as given to the compiler", dot_L ),
+	".u" : ( "Undo previous command", dot_u ),
 	".w" : ( "Show warranty information", dot_w ),
 	}
 
 def case_insensitive_string_compare( str1, str2 ):
 	return cmp( str1.lower(), str2.lower() )
 
-def dot_h(  user_commands, user_includes, compile_error ):
+def dot_h( runner ):
 	for cmd in sorted( dot_commands.keys(), case_insensitive_string_compare ):
 		print cmd, dot_commands[cmd][0]
 
-def process( inp, user_commands, user_includes, compile_error ):
+def process( inp, runner ):
 	if inp == ".h":
-		dot_h( user_commands, user_includes, compile_error )
+		dot_h( runner )
 		return True
 
 	for cmd in sorted( dot_commands.keys() ):
 		if inp == cmd:
-			dot_commands[cmd][1]( user_commands, user_includes, compile_error )
+			dot_commands[cmd][1]( runner )
 			return True
 
 	return False

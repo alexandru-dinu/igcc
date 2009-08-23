@@ -125,41 +125,47 @@ Released under GNU GPL version 2 or later, with NO WARRANTY.
 Type ".h" for help.
 '''.replace( "$version", version.VERSION )
 
-def do_run( options, inputfile, exefilename ):
-	read_line = create_read_line_function( inputfile, prompt )
+class Runner:
 
-	subs_compiler_command = get_compiler_command( options, exefilename )
+	def __init__( self, options, inputfile, exefilename ):
+		self.options = options
+		self.inputfile = inputfile
+		self.exefilename = exefilename
+		self.user_commands = ""
+		self.user_includes = ""
+		self.compile_error = ""
+		self.output_chars_printed = 0
 
-	inp = 1
-	user_commands = ""
-	user_includes = ""
-	compile_error = ""
-	output_chars_printed = 0
-	while inp is not None:
-		inp = read_line()
-		if inp is not None:
+	def do_run( self ):
+		read_line = create_read_line_function( self.inputfile, prompt )
 
-			if not dot_commands.process( inp, user_commands, user_includes,
-					compile_error ):
-				if incl_re.match( inp ):
-					user_includes += inp + "\n"
-				else:
-					user_commands += inp + "\n"
+		subs_compiler_command = get_compiler_command( self.options, self.exefilename )
 
-				compile_error = run_compile( subs_compiler_command,
-					user_commands, user_includes )
-	
-				if compile_error is not None:
-					print "[Compile error - type .e to see it.]"
-				else:
-					stdoutdata, stderrdata = run_exe( exefilename )
-		
-					if len( stdoutdata ) > output_chars_printed:
-						new_output = stdoutdata[output_chars_printed:]
-						print new_output,
-						output_chars_printed += len( new_output )
+		inp = 1
+		while inp is not None:
+			inp = read_line()
+			if inp is not None:
 
-	print
+				if not dot_commands.process( inp, self ):
+					if incl_re.match( inp ):
+						self.user_includes += inp + "\n"
+					else:
+						self.user_commands += inp + "\n"
+
+					self.compile_error = run_compile( subs_compiler_command,
+						self.user_commands, self.user_includes )
+
+					if self.compile_error is not None:
+						print "[Compile error - type .e to see it.]"
+					else:
+						stdoutdata, stderrdata = run_exe( self.exefilename )
+
+						if len( stdoutdata ) >self. output_chars_printed:
+							new_output = stdoutdata[self.output_chars_printed:]
+							print new_output,
+							self.output_chars_printed += len( new_output )
+
+		print
 
 def parse_args( argv ):
 	parser = OptionParser( version="igcc " + version.VERSION )
@@ -191,15 +197,16 @@ def run( outputfile = sys.stdout, inputfile = None, print_welc = True,
 	exefilename = ""
 
 	try:
-		options = parse_args( argv )
+		try:
+			options = parse_args( argv )
 
-		exefilename = get_temporary_file_name()
-		ret = "normal"
-		if print_welc:
-			print_welcome()
-		do_run( options, inputfile, exefilename )
-	except dot_commands.IGCCQuitException:
-		ret = "quit"
+			exefilename = get_temporary_file_name()
+			ret = "normal"
+			if print_welc:
+				print_welcome()
+			Runner( options, inputfile, exefilename ).do_run()
+		except dot_commands.IGCCQuitException:
+			ret = "quit"
 	finally:
 		sys.stdout = real_sys_stdout
 
