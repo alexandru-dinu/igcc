@@ -133,6 +133,7 @@ class Runner:
 		self.inputfile = inputfile
 		self.exefilename = exefilename
 		self.user_input = []
+		self.input_num = 0
 		self.compile_error = ""
 		self.output_chars_printed = 0
 
@@ -147,7 +148,10 @@ class Runner:
 			if inp is not None:
 
 				if not dot_commands.process( inp, self ):
+					if self.input_num < len( self.user_input ):
+						self.user_input = self.user_input[ : self.input_num ]
 					self.user_input.append( ( inp, incl_re.match( inp ) ) )
+					self.input_num += 1
 
 					self.compile_error = run_compile( subs_compiler_command,
 						self )
@@ -164,11 +168,23 @@ class Runner:
 
 		print
 
+	def undo( self ):
+		if self.input_num > 0:
+			self.input_num -= 1
+			return self.user_input[ self.input_num ][0]
+		else:
+			return None
+
+	def get_user_input( self ):
+		return itertools.islice( self.user_input, 0, self.input_num )
+
 	def get_user_commands( self ):
-		return ( a[0] for a in itertools.ifilterfalse( lambda a: a[1], self.user_input ) )
+		return ( a[0] for a in itertools.ifilterfalse(
+			lambda a: a[1], self.get_user_input() ) )
 
 	def get_user_includes( self ):
-		return ( a[0] for a in itertools.ifilter( lambda a: a[1], self.user_input ) )
+		return ( a[0] for a in itertools.ifilter(
+			lambda a: a[1], self.get_user_input() ) )
 
 	def get_user_commands_string( self ):
 		return "\n".join( self.get_user_commands() ) + "\n"

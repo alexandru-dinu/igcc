@@ -39,7 +39,11 @@ def dot_L( runner ):
 	print source_code.get_full_source( runner )
 
 def dot_u( runner ):
-	pass
+	undone_line = runner.undo()
+	if undone_line is not None:
+		print "[Undone '%s'.]" % undone_line
+	else:
+		print "[Nothing to undo.]"
 
 def dot_w( runner ):
 	print copying.warranty
