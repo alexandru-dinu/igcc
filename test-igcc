@@ -704,6 +704,7 @@ def main():
 	test_redo_after_end()
 	test_redo_includes_and_commands()
 	test_undo_then_new_commands()
+	#test_undo_redo_with_output()
 
 	#test_readline_history();
 	#test_print_command();
