@@ -168,6 +168,14 @@ class Runner:
 
 		print
 
+	def redo( self ):
+		if self.input_num < len( self.user_input ):
+			self.input_num += 1
+			return self.user_input[ self.input_num - 1 ][0]
+		else:
+			return None
+
+
 	def undo( self ):
 		if self.input_num > 0:
 			self.input_num -= 1

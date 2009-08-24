@@ -463,6 +463,214 @@ g++>
 	run_program( commands, expected_output )
 
 
+def test_undo_includes_and_commands():
+	commands = [
+		'int a = 5;',
+		'#include <vector>',
+		'++a;',
+		'.u',
+		'.u',
+		'.u',
+		]
+
+	expected_output = (
+r'''g++> int a = 5;
+g++> #include <vector>
+g++> ++a;
+g++> .u
+[Undone '++a;'.]
+g++> .u
+[Undone '#include <vector>'.]
+g++> .u
+[Undone 'int a = 5;'.]
+g++> 
+''' )
+
+	run_program( commands, expected_output )
+
+
+def test_redo_1():
+	commands = [
+		'int a = 1;',
+		'++a;',
+		'.u',
+		'.r',
+		'cout << a << endl;',
+		]
+
+	expected_output = (
+r'''g++> int a = 1;
+g++> ++a;
+g++> .u
+[Undone '++a;'.]
+g++> .r
+[Redone '++a;'.]
+g++> cout << a << endl;
+2
+g++> 
+''' )
+
+	run_program( commands, expected_output )
+
+
+
+
+def test_redo_2():
+	commands = [
+		'int a = 1;',
+		'++a;',
+		'.u',
+		'.u',
+		'.r',
+		'.r',
+		'cout << a << endl;',
+		]
+
+	expected_output = (
+r'''g++> int a = 1;
+g++> ++a;
+g++> .u
+[Undone '++a;'.]
+g++> .u
+[Undone 'int a = 1;'.]
+g++> .r
+[Redone 'int a = 1;'.]
+g++> .r
+[Redone '++a;'.]
+g++> cout << a << endl;
+2
+g++> 
+''' )
+
+	run_program( commands, expected_output )
+
+
+
+
+def test_redo_before_beginning():
+	commands = [
+		'int a = 1;',
+		'++a;',
+		'.u',
+		'.u',
+		'.u',
+		'.r',
+		'.r',
+		'cout << a << endl;',
+		]
+
+	expected_output = (
+r'''g++> int a = 1;
+g++> ++a;
+g++> .u
+[Undone '++a;'.]
+g++> .u
+[Undone 'int a = 1;'.]
+g++> .u
+[Nothing to undo.]
+g++> .r
+[Redone 'int a = 1;'.]
+g++> .r
+[Redone '++a;'.]
+g++> cout << a << endl;
+2
+g++> 
+''' )
+
+	run_program( commands, expected_output )
+
+
+
+def test_redo_after_end():
+	commands = [
+		'int a = 1;',
+		'++a;',
+		'.u',
+		'.r',
+		'.r',
+		'cout << a << endl;',
+		]
+
+	expected_output = (
+r'''g++> int a = 1;
+g++> ++a;
+g++> .u
+[Undone '++a;'.]
+g++> .r
+[Redone '++a;'.]
+g++> .r
+[Nothing to redo.]
+g++> cout << a << endl;
+2
+g++> 
+''' )
+
+	run_program( commands, expected_output )
+
+
+def test_redo_includes_and_commands():
+	commands = [
+		'int a = 5;',
+		'#include <vector>',
+		'++a;',
+		'.u',
+		'.u',
+		'.u',
+		'.r',
+		'.r',
+		'.r',
+		]
+
+	expected_output = (
+r'''g++> int a = 5;
+g++> #include <vector>
+g++> ++a;
+g++> .u
+[Undone '++a;'.]
+g++> .u
+[Undone '#include <vector>'.]
+g++> .u
+[Undone 'int a = 5;'.]
+g++> .r
+[Redone 'int a = 5;'.]
+g++> .r
+[Redone '#include <vector>'.]
+g++> .r
+[Redone '++a;'.]
+g++> 
+''' )
+
+	run_program( commands, expected_output )
+
+
+def test_undo_then_new_commands():
+	commands = [
+		'int a = 5;',
+		'++a;',
+		'.u',
+		'--a;',
+		'--a;',
+		'.u',
+		'cout << a << endl;',
+		]
+
+	expected_output = (
+r'''g++> int a = 5;
+g++> ++a;
+g++> .u
+[Undone '++a;'.]
+g++> --a;
+g++> --a;
+g++> .u
+[Undone '--a;'.]
+g++> cout << a << endl;
+4
+g++> 
+''' )
+
+	run_program( commands, expected_output )
+
+
 
 
 def main():
@@ -489,10 +697,13 @@ def main():
 	test_undo_1()
 	test_undo_2()
 	test_undo_before_beginning()
-	#test_redo_1()
-	#test_redo_2()
-	#test_redo_before_beginning()
-	#test_redo_after_end()
+	test_undo_includes_and_commands()
+	test_redo_1()
+	test_redo_2()
+	test_redo_before_beginning()
+	test_redo_after_end()
+	test_redo_includes_and_commands()
+	test_undo_then_new_commands()
 
 	#test_readline_history();
 	#test_print_command();

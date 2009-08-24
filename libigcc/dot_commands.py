@@ -38,6 +38,14 @@ def dot_l( runner ):
 def dot_L( runner ):
 	print source_code.get_full_source( runner )
 
+def dot_r( runner ):
+	redone_line = runner.redo()
+	if redone_line is not None:
+		print "[Redone '%s'.]" % redone_line
+	else:
+		print "[Nothing to redo.]"
+		
+
 def dot_u( runner ):
 	undone_line = runner.undo()
 	if undone_line is not None:
@@ -55,6 +63,7 @@ dot_commands = {
 	".q" : ( "Quit", dot_q ),
 	".l" : ( "List the code you have entered", dot_l ),
 	".L" : ( "List the whole program as given to the compiler", dot_L ),
+	".r" : ( "Redo undone command", dot_r ),
 	".u" : ( "Undo previous command", dot_u ),
 	".w" : ( "Show warranty information", dot_w ),
 	}
