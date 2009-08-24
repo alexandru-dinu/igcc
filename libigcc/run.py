@@ -17,6 +17,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 # MA 02110-1301, USA.
 
+import itertools
 import os
 import os.path
 import re
@@ -131,8 +132,7 @@ class Runner:
 		self.options = options
 		self.inputfile = inputfile
 		self.exefilename = exefilename
-		self.user_commands = []
-		self.user_includes = []
+		self.user_input = []
 		self.compile_error = ""
 		self.output_chars_printed = 0
 
@@ -147,10 +147,7 @@ class Runner:
 			if inp is not None:
 
 				if not dot_commands.process( inp, self ):
-					if incl_re.match( inp ):
-						self.user_includes.append( inp )
-					else:
-						self.user_commands.append( inp )
+					self.user_input.append( ( inp, incl_re.match( inp ) ) )
 
 					self.compile_error = run_compile( subs_compiler_command,
 						self )
@@ -167,11 +164,17 @@ class Runner:
 
 		print
 
+	def get_user_commands( self ):
+		return ( a[0] for a in itertools.ifilterfalse( lambda a: a[1], self.user_input ) )
+
+	def get_user_includes( self ):
+		return ( a[0] for a in itertools.ifilter( lambda a: a[1], self.user_input ) )
+
 	def get_user_commands_string( self ):
-		return "\n".join( self.user_commands ) + "\n"
+		return "\n".join( self.get_user_commands() ) + "\n"
 
 	def get_user_includes_string( self ):
-		return "\n".join( self.user_includes ) + "\n"
+		return "\n".join( self.get_user_includes() ) + "\n"
 
 def parse_args( argv ):
 	parser = OptionParser( version="igcc " + version.VERSION )
