@@ -33,10 +33,10 @@ def dot_q( runner ):
 	raise IGCCQuitException()
 
 def dot_l( runner ):
-	print "%s\n%s" % ( runner.user_includes, runner.user_commands )
+	print "%s\n%s" % ( runner.get_user_includes_string(), runner.get_user_commands_string() )
 
 def dot_L( runner ):
-	print source_code.get_full_source( runner.user_commands, runner.user_includes )
+	print source_code.get_full_source( runner )
 
 def dot_u( runner ):
 	pass

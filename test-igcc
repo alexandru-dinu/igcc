@@ -208,12 +208,26 @@ g++>
 
 	run_program( commands, expected_output )
 
+class FakeRunner:
+	def __init__( self, user_commands_string, user_includes_string ):
+		self.user_commands_string = user_commands_string
+		self.user_includes_string = user_includes_string
+
+	def get_user_commands_string( self ):
+		return self.user_commands_string
+
+	def get_user_includes_string( self ):
+		return self.user_includes_string
+
 def test_list_full_program():
 	commands = [
 		'int a;',
 		'a += 2;',
 		'#include <vector>',
 		'.L' ]
+
+	fakerunner = FakeRunner( 'int a;\na += 2;\n',
+		"#include <vector>\n" )
 
 	expected_output = (
 '''g++> int a;
@@ -222,8 +236,7 @@ g++> #include <vector>
 g++> .L
 %s
 g++> 
-''' % libigcc.source_code.get_full_source( 'int a;\na += 2;\n',
-		"#include <vector>\n" ) )
+''' % libigcc.source_code.get_full_source( fakerunner ) )
 
 	run_program( commands, expected_output )
 

@@ -32,9 +32,9 @@ int main()
 """
 
 
-def get_full_source( user_commands, user_includes ):
+def get_full_source( runner ):
 	return ( file_boilerplate
-		.replace( "$user_commands", user_commands )
-		.replace( "$user_includes", user_includes )
+		.replace( "$user_commands", runner.get_user_commands_string() )
+		.replace( "$user_includes", runner.get_user_includes_string() )
 		)
 

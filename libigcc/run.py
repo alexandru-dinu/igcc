@@ -94,12 +94,12 @@ def get_compiler_command( options, outfilename ):
 	return ret
 
 
-def run_compile( subs_compiler_command, user_commands, user_includes ):
+def run_compile( subs_compiler_command, runner ):
 	#print "$ " + ( " ".join( subs_compiler_command ) )
 	compile_process = subprocess.Popen( subs_compiler_command,
 		stdin = subprocess.PIPE, stderr = subprocess.PIPE )
 	stdoutdata, stderrdata = compile_process.communicate(
-		source_code.get_full_source( user_commands, user_includes ) )
+		source_code.get_full_source( runner ) )
 
 	if compile_process.returncode == 0:
 		return None
@@ -131,8 +131,8 @@ class Runner:
 		self.options = options
 		self.inputfile = inputfile
 		self.exefilename = exefilename
-		self.user_commands = ""
-		self.user_includes = ""
+		self.user_commands = []
+		self.user_includes = []
 		self.compile_error = ""
 		self.output_chars_printed = 0
 
@@ -148,12 +148,12 @@ class Runner:
 
 				if not dot_commands.process( inp, self ):
 					if incl_re.match( inp ):
-						self.user_includes += inp + "\n"
+						self.user_includes.append( inp )
 					else:
-						self.user_commands += inp + "\n"
+						self.user_commands.append( inp )
 
 					self.compile_error = run_compile( subs_compiler_command,
-						self.user_commands, self.user_includes )
+						self )
 
 					if self.compile_error is not None:
 						print "[Compile error - type .e to see it.]"
@@ -166,6 +166,12 @@ class Runner:
 							self.output_chars_printed += len( new_output )
 
 		print
+
+	def get_user_commands_string( self ):
+		return "\n".join( self.user_commands ) + "\n"
+
+	def get_user_includes_string( self ):
+		return "\n".join( self.user_includes ) + "\n"
 
 def parse_args( argv ):
 	parser = OptionParser( version="igcc " + version.VERSION )
