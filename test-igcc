@@ -22,6 +22,7 @@
 import re
 
 import libigcc.run
+from libigcc.run import UserInput
 import libigcc.source_code
 import libigcc.version
 
@@ -352,23 +353,34 @@ g\+\+\>
 
 def test_runner_get_user_input():
 	runner = libigcc.run.Runner( None, None, None )
-	runner.user_input = [ ("0", False), ("1", False), ("2", False) ]
+	runner.user_input = [
+		UserInput("0", UserInput.COMMAND),
+		UserInput("1", UserInput.COMMAND),
+		UserInput("2", UserInput.COMMAND) ]
 	runner.input_num = 3
-	assert( tuple( runner.get_user_input() ) ==
-		( ("0", False), ("1", False), ("2", False) ) )
+	assert( tuple( runner.get_user_input() ) == (
+		UserInput("0", UserInput.COMMAND),
+		UserInput("1", UserInput.COMMAND),
+		UserInput("2", UserInput.COMMAND) ) )
 
 	runner.input_num = 2
-	assert( tuple( runner.get_user_input() ) ==
-		( ("0", False), ("1", False) ) )
+	assert( tuple( runner.get_user_input() ) == (
+		UserInput("0", UserInput.COMMAND),
+		UserInput("1", UserInput.COMMAND) ) )
 
 	runner.input_num = 1
-	assert( tuple( runner.get_user_input() ) == ( ("0", False), ) )
+	assert( tuple( runner.get_user_input() ) == (
+		UserInput("0", UserInput.COMMAND), ) )
 
 
 def test_runner_get_user_commands():
 	runner = libigcc.run.Runner( None, None, None )
-	runner.user_input = [ ("0", False), ("1", False), ("2", False) ]
-	runner.input_num = 3
+	runner.user_input = [
+		UserInput("0", UserInput.COMMAND),
+		UserInput("1", UserInput.COMMAND),
+		UserInput("X", UserInput.INCLUDE),
+		UserInput("2", UserInput.COMMAND) ]
+	runner.input_num = 4
 	assert( tuple( runner.get_user_commands() ) == ( "0", "1", "2" ) )
 
 	runner.input_num = 2

@@ -126,6 +126,28 @@ Released under GNU GPL version 2 or later, with NO WARRANTY.
 Type ".h" for help.
 '''.replace( "$version", version.VERSION )
 
+class UserInput:
+	INCLUDE = 0
+	COMMAND = 1
+
+	def __init__( self, inp, typ ):
+		self.inp = inp
+		self.typ = typ
+		self.output_lines = -1
+
+	def __str__( self ):
+		return "UserInput( '%s', %d, %d )" % (
+			self.inp, self.typ, self.output_lines )
+
+	def __eq__( self, other ):
+		return (
+			self.inp == other.inp and
+			self.typ == other.typ and
+			self.output_lines == other.output_lines )
+
+	def __ne__( self, other ):
+		return not self.__eq__( other )
+
 class Runner:
 
 	def __init__( self, options, inputfile, exefilename ):
@@ -147,12 +169,19 @@ class Runner:
 			inp = read_line()
 			if inp is not None:
 
-				if not dot_commands.process( inp, self ):
+				col_inp, run_cmp = (
+					dot_commands.process( inp, self ) )
+				if col_inp:
 					if self.input_num < len( self.user_input ):
 						self.user_input = self.user_input[ : self.input_num ]
-					self.user_input.append( ( inp, incl_re.match( inp ) ) )
+					if incl_re.match( inp ):
+						typ = UserInput.INCLUDE
+					else:
+						typ = UserInput.COMMAND
+					self.user_input.append( UserInput( inp, typ ) )
 					self.input_num += 1
 
+				if run_cmp:
 					self.compile_error = run_compile( subs_compiler_command,
 						self )
 
@@ -161,7 +190,7 @@ class Runner:
 					else:
 						stdoutdata, stderrdata = run_exe( self.exefilename )
 
-						if len( stdoutdata ) >self. output_chars_printed:
+						if len( stdoutdata ) > self.output_chars_printed:
 							new_output = stdoutdata[self.output_chars_printed:]
 							print new_output,
 							self.output_chars_printed += len( new_output )
@@ -171,7 +200,7 @@ class Runner:
 	def redo( self ):
 		if self.input_num < len( self.user_input ):
 			self.input_num += 1
-			return self.user_input[ self.input_num - 1 ][0]
+			return self.user_input[ self.input_num - 1 ].inp
 		else:
 			return None
 
@@ -179,7 +208,7 @@ class Runner:
 	def undo( self ):
 		if self.input_num > 0:
 			self.input_num -= 1
-			return self.user_input[ self.input_num ][0]
+			return self.user_input[ self.input_num ].inp
 		else:
 			return None
 
@@ -187,12 +216,14 @@ class Runner:
 		return itertools.islice( self.user_input, 0, self.input_num )
 
 	def get_user_commands( self ):
-		return ( a[0] for a in itertools.ifilterfalse(
-			lambda a: a[1], self.get_user_input() ) )
+		return ( a.inp for a in itertools.ifilter(
+			lambda a: a.typ == UserInput.COMMAND,
+			self.get_user_input() ) )
 
 	def get_user_includes( self ):
-		return ( a[0] for a in itertools.ifilter(
-			lambda a: a[1], self.get_user_input() ) )
+		return ( a.inp for a in itertools.ifilter(
+			lambda a: a.typ == UserInput.INCLUDE,
+			self.get_user_input() ) )
 
 	def get_user_commands_string( self ):
 		return "\n".join( self.get_user_commands() ) + "\n"

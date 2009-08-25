@@ -25,25 +25,31 @@ class IGCCQuitException:
 
 def dot_c( runner ):
 	print copying.copying
+	return False, False
 
 def dot_e( runner ):
 	print runner.compile_error,
+	return False, False
 
 def dot_q( runner ):
 	raise IGCCQuitException()
 
 def dot_l( runner ):
 	print "%s\n%s" % ( runner.get_user_includes_string(), runner.get_user_commands_string() )
+	return False, False
 
 def dot_L( runner ):
 	print source_code.get_full_source( runner )
+	return False, False
 
 def dot_r( runner ):
 	redone_line = runner.redo()
 	if redone_line is not None:
 		print "[Redone '%s'.]" % redone_line
+		return False, True
 	else:
 		print "[Nothing to redo.]"
+		return False, False
 		
 
 def dot_u( runner ):
@@ -52,9 +58,11 @@ def dot_u( runner ):
 		print "[Undone '%s'.]" % undone_line
 	else:
 		print "[Nothing to undo.]"
+	return False, False
 
 def dot_w( runner ):
 	print copying.warranty
+	return False, False
 
 dot_commands = {
 	".c" : ( "Show copying information", dot_c ),
@@ -74,16 +82,15 @@ def case_insensitive_string_compare( str1, str2 ):
 def dot_h( runner ):
 	for cmd in sorted( dot_commands.keys(), case_insensitive_string_compare ):
 		print cmd, dot_commands[cmd][0]
+	return False, False
 
 def process( inp, runner ):
 	if inp == ".h":
-		dot_h( runner )
-		return True
+		return dot_h( runner )
 
 	for cmd in sorted( dot_commands.keys() ):
 		if inp == cmd:
-			dot_commands[cmd][1]( runner )
-			return True
+			return dot_commands[cmd][1]( runner )
 
-	return False
+	return True, True
 
