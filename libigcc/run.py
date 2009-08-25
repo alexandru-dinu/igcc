@@ -133,17 +133,17 @@ class UserInput:
 	def __init__( self, inp, typ ):
 		self.inp = inp
 		self.typ = typ
-		self.output_lines = -1
+		self.output_chars = 0
 
 	def __str__( self ):
 		return "UserInput( '%s', %d, %d )" % (
-			self.inp, self.typ, self.output_lines )
+			self.inp, self.typ, self.output_chars )
 
 	def __eq__( self, other ):
 		return (
 			self.inp == other.inp and
 			self.typ == other.typ and
-			self.output_lines == other.output_lines )
+			self.output_chars == other.output_chars )
 
 	def __ne__( self, other ):
 		return not self.__eq__( other )
@@ -192,8 +192,10 @@ class Runner:
 
 						if len( stdoutdata ) > self.output_chars_printed:
 							new_output = stdoutdata[self.output_chars_printed:]
+							len_new_output = len( new_output )
 							print new_output,
-							self.output_chars_printed += len( new_output )
+							self.output_chars_printed += len_new_output
+							self.user_input[ -1 ].output_chars = len_new_output
 
 		print
 
@@ -208,7 +210,9 @@ class Runner:
 	def undo( self ):
 		if self.input_num > 0:
 			self.input_num -= 1
-			return self.user_input[ self.input_num ].inp
+			undone_input = self.user_input[ self.input_num ]
+			self.output_chars_printed -= undone_input.output_chars
+			return undone_input.inp
 		else:
 			return None
 
