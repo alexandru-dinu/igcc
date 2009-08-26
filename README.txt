@@ -86,6 +86,8 @@ Untar it like so:
 
  tar -xjf igcc-0.1.tar.bz2
 
+And then start the program like this:
+
  cd igcc-0.1
  ./igcc
 
