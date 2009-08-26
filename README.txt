@@ -84,7 +84,7 @@ https://sourceforge.net/projects/igcc/files/
 
 Untar it like so:
 
- tar -xzf igcc-0.1.tar.gz
+ tar -xjf igcc-0.1.tar.bz2
 
  cd igcc-0.1
  ./igcc
