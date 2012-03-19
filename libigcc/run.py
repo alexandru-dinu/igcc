@@ -117,7 +117,8 @@ def run_compile( subs_compiler_command, runner ):
 		
 
 def run_exe( exefilename ):
-	run_process = subprocess.Popen( exefilename, stdout = subprocess.PIPE )
+	run_process = subprocess.Popen( exefilename,
+		stdout = subprocess.PIPE, stderr = subprocess.PIPE )
 	return run_process.communicate()
 
 def print_welcome():
@@ -134,16 +135,18 @@ class UserInput:
 		self.inp = inp
 		self.typ = typ
 		self.output_chars = 0
+		self.error_chars = 0
 
 	def __str__( self ):
-		return "UserInput( '%s', %d, %d )" % (
-			self.inp, self.typ, self.output_chars )
+		return "UserInput( '%s', %d, %d, %d )" % (
+			self.inp, self.typ, self.output_chars, self.error_chars )
 
 	def __eq__( self, other ):
 		return (
 			self.inp == other.inp and
 			self.typ == other.typ and
-			self.output_chars == other.output_chars )
+			self.output_chars == other.output_chars and
+			self.error_chars == other.error_chars )
 
 	def __ne__( self, other ):
 		return not self.__eq__( other )
@@ -158,6 +161,7 @@ class Runner:
 		self.input_num = 0
 		self.compile_error = ""
 		self.output_chars_printed = 0
+		self.error_chars_printed = 0
 
 	def do_run( self ):
 		read_line = create_read_line_function( self.inputfile, prompt )
@@ -197,6 +201,13 @@ class Runner:
 							self.output_chars_printed += len_new_output
 							self.user_input[ -1 ].output_chars = len_new_output
 
+						if len( stderrdata ) > self.error_chars_printed:
+							new_error = stderrdata[self.error_chars_printed:]
+							len_new_error = len( new_error )
+							print new_error,
+							self.error_chars_printed += len_new_error
+							self.user_input[ -1 ].error_chars = len_new_error
+
 		print
 
 	def redo( self ):
@@ -212,6 +223,7 @@ class Runner:
 			self.input_num -= 1
 			undone_input = self.user_input[ self.input_num ]
 			self.output_chars_printed -= undone_input.output_chars
+			self.error_chars_printed -= undone_input.error_chars
 			return undone_input.inp
 		else:
 			return None

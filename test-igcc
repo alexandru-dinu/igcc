@@ -712,6 +712,73 @@ g++>
 	run_program( commands, expected_output )
 
 
+
+def test_print_stderr_twice():
+	commands = [ "int a = 10;",
+		'cerr << a << endl;',
+		"++a;",
+		'cerr << a << endl;' ]
+
+	expected_output = (
+'''g++> int a = 10;
+g++> cerr << a << endl;
+10
+g++> ++a;
+g++> cerr << a << endl;
+11
+g++> 
+''' )
+
+	run_program( commands, expected_output )
+
+
+def test_print_stderr_stdout():
+	commands = [ "int a = 10;",
+		'cerr << a << endl;',
+		"++a;",
+		'cout << a << endl;' ]
+
+	expected_output = (
+'''g++> int a = 10;
+g++> cerr << a << endl;
+10
+g++> ++a;
+g++> cout << a << endl;
+11
+g++> 
+''' )
+
+	run_program( commands, expected_output )
+
+
+def test_undo_stderr_then_new_commands():
+	commands = [
+		'int a = 5;',
+		'++a;',
+		'.u',
+		'--a;',
+		'--a;',
+		'.u',
+		'cerr << a << endl;',
+		]
+
+	expected_output = (
+r'''g++> int a = 5;
+g++> ++a;
+g++> .u
+[Undone '++a;'.]
+g++> --a;
+g++> --a;
+g++> .u
+[Undone '--a;'.]
+g++> cerr << a << endl;
+4
+g++> 
+''' )
+
+	run_program( commands, expected_output )
+
+
 def main():
 	test_declare_var()
 	test_declare_var_assign()
@@ -744,6 +811,9 @@ def main():
 	test_redo_includes_and_commands()
 	test_undo_then_new_commands()
 	test_undo_redo_with_output()
+	test_print_stderr_twice()
+	test_print_stderr_stdout()
+	test_undo_stderr_then_new_commands()
 
 	#test_readline_history();
 	#test_print_command();
