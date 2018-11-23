@@ -1,7 +1,7 @@
 Interactive GCC
 ===============
 
-Interactive GCC (igcc) is a real-eval-print loop (REPL) for C/C++ programmers.
+Interactive GCC (igcc) is a read-eval-print loop (REPL) for C/C++ programmers.
 
 It can be used like this:
 
