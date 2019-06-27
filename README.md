@@ -1,13 +1,15 @@
 # Interactive GCC
 
+_This is forked from https://sourceforge.net/projects/igcc/. I have done some refactoring and ported to Python 3.7, currently maintaining it._
+
 Interactive GCC (igcc) is a read-eval-print loop (REPL) for C/C++ programmers.
-The `cstdio`, `iostream` and `string` headers are automatically included, 
+The `cstdio`, `iostream` and `string` headers are automatically included,
 and the `std namespace` is automatically in scope.
 
 It can be used like this:
 
 ```
-$ ./igcc 
+$ ./igcc
 g++> int a = 5;
 g++> a += 2;
 g++> cout << a << endl;
@@ -15,13 +17,13 @@ g++> cout << a << endl;
 g++> --a;
 g++> cout << a << endl;
 6
-g++> 
+g++>
 ```
 
 It is possible to include header files you need like this:
 
 ```
-$ ./igcc 
+$ ./igcc
 g++> #include <vector>
 g++> vector<int> myvec;
 g++> myvec.push_back( 17 );
@@ -30,7 +32,7 @@ g++> printf( "%d\n", myvec.size() );
 g++> myvec.push_back( 21 );
 g++> printf( "%d\n", myvec.size() );
 2
-g++> 
+g++>
 ```
 
 Compile errors can be tolerated until the code works:
@@ -50,7 +52,7 @@ g++> 	cout << it->first << " " << it->second << endl;
 g++> }
 bar 15
 foo 12
-g++> 
+g++>
 ```
 
 Extra include directories can be supplied:
@@ -59,11 +61,11 @@ Extra include directories can be supplied:
 $ ./igcc -Itest/cpp -Itest/cpp2
 g++> #include "hello.h"
 g++> hello();
-Hello, 
+Hello,
 g++> #include "world.h"
 g++> world();
 world!
-g++> 
+g++>
 ```
 
 Libs can be linked:
@@ -73,7 +75,7 @@ $ ./igcc -lm
 g++> #include "math.h"
 g++> cout << pow( 3, 3 ) << endl; // Actually a bad example since libm.a is already linked in C++
 27
-g++> 
+g++>
 ```
 
 Your own libs can be linked too:
@@ -83,7 +85,7 @@ $ ./igcc -Itest/cpp -Ltest/cpp -lmylib
 g++> #include "mylib.h"
 g++> defined_in_cpp();
 defined_in_cpp saying hello.
-g++> 
+g++>
 ```
 
 ## Downloading and usage
