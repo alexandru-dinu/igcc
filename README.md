@@ -1,3 +1,5 @@
+[![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-Ready--to--Code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/alexandru-dinu/igcc) 
+
 # Interactive GCC
 
 _This is forked from https://sourceforge.net/projects/igcc/. I have done some refactoring and ported to Python 3.7, currently maintaining it._
