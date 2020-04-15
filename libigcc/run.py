@@ -7,6 +7,7 @@ import subprocess
 import sys
 import tempfile
 from optparse import OptionParser
+from termcolor import colored
 
 import yaml
 
@@ -19,14 +20,16 @@ config = argparse.Namespace(**yaml.safe_load(open(config_path)))
 incl_re = re.compile(r"\s*#\s*include\s")
 
 
-def read_line_from_stdin(prompt):
+def read_line_from_stdin(prompt, n):
+    prompt = colored(f'[{n:3d}] {prompt}', 'green')
     try:
         return input(prompt)
     except EOFError:
         return None
 
 
-def read_line_from_file(input_file, prompt):
+def read_line_from_file(input_file, prompt, n):
+    prompt = colored(f'[{n:3d}] {prompt}', 'green')
     sys.stdout.write(prompt)
     line = input_file.readline()
 
@@ -38,9 +41,9 @@ def read_line_from_file(input_file, prompt):
 
 def create_read_line_function(input_file, prompt):
     if input_file is None:
-        return lambda: read_line_from_stdin(prompt)
+        return lambda n: read_line_from_stdin(prompt, n)
     else:
-        return lambda: read_line_from_file(input_file, prompt)
+        return lambda n: read_line_from_file(input_file, prompt, n)
 
 
 def get_tmp_filename():
@@ -145,53 +148,55 @@ class Runner:
         read_line = create_read_line_function(self.inputfile, config.prompt)
         subs_compiler_command = get_compiler_command(self.options, self.exec_filename)
 
-        inp = 1
-        while inp is not None:
+        while True:
+            inp = read_line(self.input_num)
+            if inp is None:
+                break
 
-            inp = read_line()
+            col_inp, run_cmp = (dot_commands.process(inp, self))
 
-            if inp is not None:
+            if col_inp:
+                if self.input_num < len(self.user_input):
+                    self.user_input = self.user_input[: self.input_num]
+                if incl_re.match(inp):
+                    typ = UserInput.INCLUDE
+                else:
+                    typ = UserInput.COMMAND
 
-                col_inp, run_cmp = (dot_commands.process(inp, self))
+                self.user_input.append(UserInput(inp, typ))
+                self.input_num += 1
 
-                if col_inp:
-                    if self.input_num < len(self.user_input):
-                        self.user_input = self.user_input[: self.input_num]
-                    if incl_re.match(inp):
-                        typ = UserInput.INCLUDE
-                    else:
-                        typ = UserInput.COMMAND
+            if run_cmp:
+                self.compile_error = run_compile(subs_compiler_command, self)
 
-                    self.user_input.append(UserInput(inp, typ))
-                    self.input_num += 1
+                if self.compile_error is not None:
+                    info  = '[Compile error - type .e to see it.]\n'
+                    info += '[Disregard if multi-line statements.]'
+                    print(colored(info, 'yellow'))
+                else:
+                    stdout_data, stderr_data = run_exec(self.exec_filename)
 
-                if run_cmp:
-                    self.compile_error = run_compile(subs_compiler_command, self)
+                    print(colored(f'[{self.input_num-1:3d}]  out>', 'cyan'))
 
-                    if self.compile_error is not None:
-                        print("[Compile error - type .e to see it.]")
-                    else:
-                        stdout_data, stderr_data = run_exec(self.exec_filename)
+                    if len(stdout_data) > self.output_chars_printed:
+                        new_output = stdout_data[self.output_chars_printed:]
+                        len_new_output = len(new_output)
 
-                        if len(stdout_data) > self.output_chars_printed:
-                            new_output = stdout_data[self.output_chars_printed:]
-                            len_new_output = len(new_output)
+                        print(new_output.decode('utf8'))
 
-                            print(new_output.decode('utf8'))
+                        self.output_chars_printed += len_new_output
+                        self.user_input[-1].output_chars = len_new_output
 
-                            self.output_chars_printed += len_new_output
-                            self.user_input[-1].output_chars = len_new_output
+                    if len(stderr_data) > self.error_chars_printed:
+                        new_error = stderr_data[self.error_chars_printed:]
+                        len_new_error = len(new_error)
 
-                        if len(stderr_data) > self.error_chars_printed:
-                            new_error = stderr_data[self.error_chars_printed:]
-                            len_new_error = len(new_error)
+                        print(new_error.decode('utf8'))
 
-                            print(new_error.decode('utf8'))
+                        self.error_chars_printed += len_new_error
+                        self.user_input[-1].error_chars = len_new_error
 
-                            self.error_chars_printed += len_new_error
-                            self.user_input[-1].error_chars = len_new_error
-
-        print()
+            print() # ensure empty newline between commands
 
     def redo(self):
         if self.input_num < len(self.user_input):
@@ -241,8 +246,7 @@ def parse_args(argv):
     (options, args) = parser.parse_args(argv)
 
     if len(args) > 0:
-        parser.error("Unrecognised arguments :" +
-                     " ".join(arg for arg in args))
+        parser.error("Unrecognised arguments :" + " ".join(arg for arg in args))
 
     return options
 

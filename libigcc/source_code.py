@@ -9,15 +9,14 @@ using namespace std;
 
 int main(void)
 {
-    $user_commands
-    
+    $user_input
+
     return 0;
 }
-"""
+""".strip()
 
 
 def get_full_source(runner):
     return (file_boilerplate
-            .replace("$user_commands", runner.get_user_commands_string())
-            .replace("$user_includes", runner.get_user_includes_string())
-            )
+            .replace("$user_input", runner.get_user_commands_string())
+            .replace("$user_includes", runner.get_user_includes_string()))

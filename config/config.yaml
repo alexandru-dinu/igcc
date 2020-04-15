@@ -1,4 +1,4 @@
-prompt         : "g++> "
+prompt         : "igcc> "
 compiler_cmd   : "g++ -x c++ -Wall -o $outfile - $include_dirs $lib_dirs $libs"
 include_dir_cmd: "-I$cmd"
 lib_dir_cmd    : "-L$cmd"
