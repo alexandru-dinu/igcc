@@ -3,33 +3,34 @@ import itertools
 import os
 import os.path
 import re
+import readline
 import subprocess
 import sys
 import tempfile
 from optparse import OptionParser
-from termcolor import colored
 
 import yaml
 
 import dot_commands
 import source_code
+from colors import colorize
+
+readline.parse_and_bind('tab: complete')
 
 config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../config/config.yaml')
 config = argparse.Namespace(**yaml.safe_load(open(config_path)))
 
 incl_re = re.compile(r"\s*#\s*include\s")
 
-
 def read_line_from_stdin(prompt, n):
-    prompt = colored(f'[{n:3d}] {prompt}', 'green')
+    prompt = colorize(f'[{n:3d}] {prompt}', 'green')
     try:
-        return input(prompt)
+        return input(prompt).rstrip()
     except EOFError:
         return None
 
-
 def read_line_from_file(input_file, prompt, n):
-    prompt = colored(f'[{n:3d}] {prompt}', 'green')
+    prompt = colorize(f'[{n:3d}] {prompt}', 'green')
     sys.stdout.write(prompt)
     line = input_file.readline()
 
@@ -38,13 +39,11 @@ def read_line_from_file(input_file, prompt, n):
 
     return line
 
-
 def create_read_line_function(input_file, prompt):
     if input_file is None:
         return lambda n: read_line_from_stdin(prompt, n)
     else:
         return lambda n: read_line_from_file(input_file, prompt, n)
-
 
 def get_tmp_filename():
     outfile = tempfile.NamedTemporaryFile(prefix='igcc-tmp')
@@ -52,11 +51,9 @@ def get_tmp_filename():
     outfile.close()
     return outfilename
 
-
 def append_multiple(single_cmd, cmdlist, ret):
     if cmdlist is not None:
         ret += [cmd_part.replace("$cmd", cmd) for cmd_part in single_cmd for cmd in cmdlist]
-
 
 def get_compiler_command(options, out_filename):
     ret = []
@@ -73,37 +70,36 @@ def get_compiler_command(options, out_filename):
 
     return ret
 
-
 def run_compile(subs_compiler_command, runner):
     src = source_code.get_full_source(runner)
 
     compile_process = subprocess.Popen(
         subs_compiler_command,
         stdin=subprocess.PIPE, stderr=subprocess.PIPE,
-        encoding='utf8'
-    )
+        encoding='utf8')
 
     stdout_data, stderr_data = compile_process.communicate(input=src)
 
     if compile_process.returncode == 0:
         return None
 
-    elif stdout_data is not None:
-        if stderr_data is not None:
-            return stdout_data + stderr_data
-        else:
-            return stdout_data
-    else:
-        if stderr_data is not None:
-            return stderr_data
-        else:
-            return "Unknown compile error - compiler did not write any output."
+    out = ''
 
+    if stdout_data is not None:
+        out += stdout_data
 
-def run_exec(exefilename):
-    run_process = subprocess.Popen(exefilename, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    return run_process.communicate()
+    if stderr_data is not None:
+        out += stderr_data
 
+    if out == '':
+        return "Unknown compile error - compiler did not write any output."
+
+    return out
+
+def run_exec(file_name):
+    return subprocess.Popen(file_name,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE).communicate()
 
 class UserInput:
     INCLUDE = 0
@@ -116,9 +112,7 @@ class UserInput:
         self.error_chars = 0
 
     def __str__(self):
-        return "UserInput( '%s', %d, %d, %d )" % (
-            self.inp, self.typ, self.output_chars, self.error_chars
-        )
+        return f"UserInput( {self.inp}, {self.typ}, {self.output_chars}, {self.error_chars} )"
 
     def __eq__(self, other):
         return all([
@@ -131,13 +125,11 @@ class UserInput:
     def __ne__(self, other):
         return not self.__eq__(other)
 
-
 class Runner:
-
-    def __init__(self, options, inputfile, exefilename):
+    def __init__(self, options, input_file, exec_filename):
         self.options = options
-        self.inputfile = inputfile
-        self.exec_filename = exefilename
+        self.input_file = input_file
+        self.exec_filename = exec_filename
         self.user_input = []
         self.input_num = 0
         self.compile_error = ""
@@ -145,7 +137,7 @@ class Runner:
         self.error_chars_printed = 0
 
     def do_run(self):
-        read_line = create_read_line_function(self.inputfile, config.prompt)
+        read_line = create_read_line_function(self.input_file, config.prompt)
         subs_compiler_command = get_compiler_command(self.options, self.exec_filename)
 
         while True:
@@ -153,67 +145,63 @@ class Runner:
             if inp is None:
                 break
 
-            col_inp, run_cmp = (dot_commands.process(inp, self))
+            col_inp, run_compiler = dot_commands.process(inp, self)
 
             if col_inp:
                 if self.input_num < len(self.user_input):
                     self.user_input = self.user_input[: self.input_num]
-                if incl_re.match(inp):
-                    typ = UserInput.INCLUDE
-                else:
-                    typ = UserInput.COMMAND
 
+                typ = [UserInput.COMMAND, UserInput.INCLUDE][incl_re.match(inp) is not None]
                 self.user_input.append(UserInput(inp, typ))
                 self.input_num += 1
 
-            if run_cmp:
+            if run_compiler:
                 self.compile_error = run_compile(subs_compiler_command, self)
 
                 if self.compile_error is not None:
-                    info  = '[Compile error - type .e to see it.]\n'
-                    info += '[Disregard if multi-line statements.]'
-                    print(colored(info, 'yellow'))
-                else:
-                    stdout_data, stderr_data = run_exec(self.exec_filename)
+                    info = 'Compile error - type .e to see it OR disregard if multi-line statement(s)\n'
+                    print(colorize(info, 'magenta'))
+                    continue
 
-                    print(colored(f'[{self.input_num-1:3d}]  out>', 'cyan'))
+                stdout_data, stderr_data = run_exec(self.exec_filename)
 
-                    if len(stdout_data) > self.output_chars_printed:
-                        new_output = stdout_data[self.output_chars_printed:]
-                        len_new_output = len(new_output)
+                if len(stdout_data) > self.output_chars_printed:
+                    new_output = stdout_data[self.output_chars_printed:]
+                    len_new_output = len(new_output)
 
-                        print(new_output.decode('utf8'))
+                    print(new_output.decode('utf8'))
 
-                        self.output_chars_printed += len_new_output
-                        self.user_input[-1].output_chars = len_new_output
+                    self.output_chars_printed += len_new_output
+                    self.user_input[-1].output_chars = len_new_output
 
-                    if len(stderr_data) > self.error_chars_printed:
-                        new_error = stderr_data[self.error_chars_printed:]
-                        len_new_error = len(new_error)
+                if len(stderr_data) > self.error_chars_printed:
+                    new_error = stderr_data[self.error_chars_printed:]
+                    len_new_error = len(new_error)
 
-                        print(new_error.decode('utf8'))
+                    print(new_error.decode('utf8'))
 
-                        self.error_chars_printed += len_new_error
-                        self.user_input[-1].error_chars = len_new_error
+                    self.error_chars_printed += len_new_error
+                    self.user_input[-1].error_chars = len_new_error
 
-            print() # ensure empty newline between commands
+            print()  # ensure empty newline between commands
 
     def redo(self):
-        if self.input_num < len(self.user_input):
-            self.input_num += 1
-            return self.user_input[self.input_num - 1].inp
-        else:
+        if self.input_num >= len(self.user_input):
             return None
 
+        self.input_num += 1
+        return self.user_input[self.input_num - 1].inp
+
     def undo(self):
-        if self.input_num > 0:
-            self.input_num -= 1
-            undone_input = self.user_input[self.input_num]
-            self.output_chars_printed -= undone_input.output_chars
-            self.error_chars_printed -= undone_input.error_chars
-            return undone_input.inp
-        else:
+        if self.input_num == 0:
             return None
+
+        self.input_num -= 1
+        undone_input = self.user_input[self.input_num]
+        self.output_chars_printed -= undone_input.output_chars
+        self.error_chars_printed -= undone_input.error_chars
+
+        return undone_input.inp
 
     def get_user_input(self):
         return itertools.islice(self.user_input, 0, self.input_num)
@@ -230,7 +218,6 @@ class Runner:
     def get_user_includes_string(self):
         return "\n".join(self.get_user_includes()) + "\n"
 
-
 def parse_args(argv):
     parser = OptionParser()
 
@@ -243,18 +230,16 @@ def parse_args(argv):
     parser.add_option("-l", "", dest="LIB", action="append",
         help="Search the library LIB when linking.")
 
-    (options, args) = parser.parse_args(argv)
+    options, args = parser.parse_args(argv)
 
     if len(args) > 0:
         parser.error("Unrecognised arguments :" + " ".join(arg for arg in args))
 
     return options
 
-
 def run(output_file=sys.stdout, input_file=None, argv=None):
     real_sys_stdout = sys.stdout
     sys.stdout = output_file
-
     exec_filename = ""
 
     try:
@@ -266,7 +251,7 @@ def run(output_file=sys.stdout, input_file=None, argv=None):
 
             Runner(options, input_file, exec_filename).do_run()
 
-        except dot_commands.IGCCQuitException:
+        except (dot_commands.IGCCQuitException, KeyboardInterrupt):
             ret = "quit"
 
     finally:
