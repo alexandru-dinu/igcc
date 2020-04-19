@@ -59,7 +59,12 @@ Hello, World!
 
 ## Downloading and usage
 
-Clone the repository, then run the prompt: `./igcc -I libigcc`
+```bash
+git clone https://github.com/alexandru-dinu/igcc.git
+cd igcc
+pip install -r requirements.txt
+./igcc -I libigcc
+```
 
 The code will be compiled with GCC and the results (if any) will be displayed.
 Type `.h` for help:
