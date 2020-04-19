@@ -2,14 +2,16 @@
 
 function test_lib_dir()
 {
-    cd cpp && \
+    cd cpp1 && \
     g++ -o mylib.o -c mylib.cpp && \
     ar rc libmylib.a mylib.o && \
     ranlib libmylib.a && \
 
     cd .. && \
 
-    echo -e '#include "mylib.h"\ndefined_in_cpp();' | python ../igcc -Icpp -Lcpp -lmylib | grep "defined_in_cpp saying hello" > /dev/null
+    echo -e '#include "mylib.h"\ndefined_in_cpp();' | \
+    python ../igcc -I../libigcc -Icpp1 -Lcpp1 -lmylib | \
+    grep "defined_in_cpp saying hello" > /dev/null
 
     if [[ $? != 0 ]]; then
     {
@@ -18,5 +20,4 @@ function test_lib_dir()
     }; fi
 }
 
-test_lib_dir && echo "Lib test passed." && rm -rf cpp/*.a cpp/*.o
-
+test_lib_dir && echo "Lib test passed." && rm -rf cpp1/*.a cpp1/*.o
