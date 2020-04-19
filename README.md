@@ -1,104 +1,79 @@
-[![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-Ready--to--Code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/alexandru-dinu/igcc) 
+[![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-Ready--to--Code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/alexandru-dinu/igcc)
 
 # Interactive GCC
 
-_This is forked from https://sourceforge.net/projects/igcc/. I have done some refactoring and ported to Python 3.7, currently maintaining it._
+**NOTE**: This is forked from https://sourceforge.net/projects/igcc/. I have done some refactoring and ported it to Python 3.7. I am currently maintaining it.
 
-Interactive GCC (igcc) is a read-eval-print loop (REPL) for C/C++ programmers.
-The `cstdio`, `iostream` and `string` headers are automatically included,
-and the `std namespace` is automatically in scope.
+Interactive GCC (igcc) is a read-eval-print loop (REPL) for C/C++.
+A default [`libigcc/boilerplate.h`](https://github.com/alexandru-dinu/igcc/blob/master/libigcc/boilerplate.h) header is included, containing common libraries, useful functions, and `using namespace std;`
 
-It can be used like this:
+Simple usage:
 
 ```
-$ ./igcc
-g++> int a = 5;
-g++> a += 2;
-g++> cout << a << endl;
+$ ./igcc -I libigcc
+[  0] igcc> int a = 5;
+[  1] igcc> a += 2;
+[  2] igcc> cout << a << endl;
 7
-g++> --a;
-g++> cout << a << endl;
+[  3] igcc> --a;
+[  4] igcc> cout << a << endl;
 6
-g++>
 ```
 
-It is possible to include header files you need like this:
+Include header files:
 
 ```
-$ ./igcc
-g++> #include <vector>
-g++> vector<int> myvec;
-g++> myvec.push_back( 17 );
-g++> printf( "%d\n", myvec.size() );
-1
-g++> myvec.push_back( 21 );
-g++> printf( "%d\n", myvec.size() );
-2
-g++>
+$ ./igcc -I libigcc
+[  0] igcc> #include <vector>
+[  1] igcc> vector<int> xs = {1,2,3};
+[  2] igcc> xs.push_back(17);
+[  3] igcc> xs.pop_back();
+[  4] igcc> printf("%u", xs.size());
+3
 ```
 
 Compile errors can be tolerated until the code works:
 
 ```
 $ ./igcc
-g++> #include <map>
-g++> map<string,int> hits;
-g++> hits["foo"] = 12;
-g++> hits["bar"] = 15;
-g++> for( map<string,int>::iterator it = hits.begin(); it != hits.end(); ++it )
-[Compile error - type .e to see it.]
-g++> {
-[Compile error - type .e to see it.]
-g++> 	cout << it->first << " " << it->second << endl;
-[Compile error - type .e to see it.]
-g++> }
-bar 15
-foo 12
-g++>
-```
+[  0] igcc> for (int i = 0; i < 10; i++) {
+Compile error - type .e to see it OR disregard if multi-line statement(s)
 
-Extra include directories can be supplied:
+[  1] igcc> cout << i << " ";
+Compile error - type .e to see it OR disregard if multi-line statement(s)
 
-```
-$ ./igcc -Itest/cpp -Itest/cpp2
-g++> #include "hello.h"
-g++> hello();
-Hello,
-g++> #include "world.h"
-g++> world();
-world!
-g++>
+[  2] igcc> }
+0 1 2 3 4 5 6 7 8 9
 ```
 
 Libs can be linked:
 
 ```
-$ ./igcc -lm
-g++> #include "math.h"
-g++> cout << pow( 3, 3 ) << endl; // Actually a bad example since libm.a is already linked in C++
-27
-g++>
-```
-
-Your own libs can be linked too:
-
-```
-$ ./igcc -Itest/cpp -Ltest/cpp -lmylib
-g++> #include "mylib.h"
-g++> defined_in_cpp();
-defined_in_cpp saying hello.
-g++>
+$ ./igcc -I libigcc -lpthread
+[  0] igcc> #include <pthread.h>
+[  1] igcc> pthread_t thr;
+[  2] igcc> const char* msg = "Hello, World!";
+[  3] igcc> int ret = pthread_create(&thr, NULL, print_msg, (void*) msg); pthread_join(thr, NULL);
+Hello, World!
 ```
 
 ## Downloading and usage
 
-Clone the repository, then run the prompt:
-```
-./igcc
-```
+Clone the repository, then run the prompt: `./igcc -I libigcc`
 
 The code will be compiled with GCC and the results (if any) will be displayed.
-Type `.h` to see some (minimal) help.
+Type `.h` for help:
+
+```
+[  0] igcc> .h
+.L List the whole program as given to the compiler
+.e Show the last compile errors/warnings
+.h Show this help message
+.l List the code you have entered
+.q Quit
+.r Redo undone command
+.u Undo previous command
+```
 
 
 ## Links
