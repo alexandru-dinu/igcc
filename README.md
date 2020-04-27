@@ -4,8 +4,34 @@
 
 **NOTE**: This is forked from https://sourceforge.net/projects/igcc/. I have done some refactoring and ported it to Python 3.7. I am currently maintaining it.
 
-Interactive GCC (igcc) is a read-eval-print loop (REPL) for C/C++.
-A default [`libigcc/boilerplate.h`](https://github.com/alexandru-dinu/igcc/blob/master/libigcc/boilerplate.h) header is included, containing common libraries, useful functions, and `using namespace std;`
+- Interactive GCC (igcc) is a read-eval-print loop (REPL) for C/C++
+- A default [`libigcc/boilerplate.h`](https://github.com/alexandru-dinu/igcc/blob/master/libigcc/boilerplate.h) header is included, with `<bits/stdc++.h>`, `using namespace std;`, and some helper functions
+- For configuration (mainly related to compiling) see [`config/config.yaml`](https://github.com/alexandru-dinu/igcc/blob/master/config/config.yaml)
+
+## Running
+
+```bash
+git clone https://github.com/alexandru-dinu/igcc.git
+cd igcc
+pip install -r requirements.txt
+./igcc -I libigcc
+```
+
+The code will be compiled with GCC and the results (if any) will be displayed.
+Type `.h` for help:
+
+```
+[  0] igcc> .h
+.L List the whole program as given to the compiler
+.e Show the last compile errors/warnings
+.h Show this help message
+.l List the code you have entered
+.q Quit
+.r Redo undone command
+.u Undo previous command
+```
+
+## Usage
 
 Simple usage:
 
@@ -53,33 +79,10 @@ $ ./igcc -I libigcc -lpthread
 [  0] igcc> #include <pthread.h>
 [  1] igcc> pthread_t thr;
 [  2] igcc> const char* msg = "Hello, World!";
-[  3] igcc> int ret = pthread_create(&thr, NULL, print_msg, (void*) msg); pthread_join(thr, NULL);
+[  3] igcc> // assuming print_msg is defined somewhere
+[  4] igcc> int ret = pthread_create(&thr, NULL, print_msg, (void*) msg); pthread_join(thr, NULL);
 Hello, World!
 ```
-
-## Downloading and usage
-
-```bash
-git clone https://github.com/alexandru-dinu/igcc.git
-cd igcc
-pip install -r requirements.txt
-./igcc -I libigcc
-```
-
-The code will be compiled with GCC and the results (if any) will be displayed.
-Type `.h` for help:
-
-```
-[  0] igcc> .h
-.L List the whole program as given to the compiler
-.e Show the last compile errors/warnings
-.h Show this help message
-.l List the code you have entered
-.q Quit
-.r Redo undone command
-.u Undo previous command
-```
-
 
 ## Links
 - [IGCC home page](http://www.artificialworlds.net/wiki/IGCC/IGCC)
@@ -89,12 +92,7 @@ Type `.h` for help:
 
 ## Credits
 
-Andy Balaam may be contacted on axis3x3 at users dot sourceforge dot net
-
-IGCC is Copyright (C) 2009 Andy Balaam
-
-IGCC is Free Software released under the terms of the GNU General Public License version 2 or later.
-
-IGCC comes with NO WARRANTY.
-
-See the file COPYING for more information.
+- Andy Balaam may be contacted on axis3x3 at users dot sourceforge dot net
+- IGCC is Copyright (C) 2009 Andy Balaam
+- IGCC is Free Software released under the terms of the GNU General Public License version 2 or later
+- IGCC comes with NO WARRANTY
