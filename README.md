@@ -94,5 +94,5 @@ Hello, World!
 
 - Andy Balaam may be contacted on axis3x3 at users dot sourceforge dot net
 - IGCC is Copyright (C) 2009 Andy Balaam
-- IGCC is Free Software released under the terms of the GNU General Public License version 2 or later
+- IGCC is Free Software released under the terms of the GNU General Public License version 3
 - IGCC comes with NO WARRANTY
