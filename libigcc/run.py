@@ -1,13 +1,12 @@
 import argparse
 import itertools
-import os
-import os.path
 import re
 import readline
 import subprocess
 import sys
 import tempfile
 from optparse import OptionParser
+from pathlib import Path
 
 import yaml
 
@@ -17,9 +16,9 @@ from colors import colorize
 
 readline.parse_and_bind('tab: complete')
 
-config_path = os.path.join(os.path.dirname(
-    os.path.abspath(__file__)), '../config/config.yaml')
-config = argparse.Namespace(**yaml.safe_load(open(config_path)))
+cfg_path = Path(__file__).resolve().parents[1] / 'config.yaml'
+with open(cfg_path, 'rt') as fp:
+    config = argparse.Namespace(**yaml.safe_load(fp))
 
 incl_re = re.compile(r"\s*#\s*include\s")
 
@@ -142,7 +141,7 @@ class Runner:
     def __init__(self, options, input_file, exec_filename):
         self.options = options
         self.input_file = input_file
-        self.exec_filename = exec_filename
+        self.exec_filename = str(exec_filename)
         self.user_input = []
         self.input_num = 0
         self.compile_error = ""
@@ -261,13 +260,13 @@ def parse_args(argv):
 def run(output_file=sys.stdout, input_file=None, argv=None):
     real_sys_stdout = sys.stdout
     sys.stdout = output_file
-    exec_filename = ""
+    exec_filename = None
 
     try:
         try:
             options = parse_args(argv)
 
-            exec_filename = get_tmp_filename()
+            exec_filename = Path(get_tmp_filename())
             ret = "normal"
 
             Runner(options, input_file, exec_filename).do_run()
@@ -278,7 +277,7 @@ def run(output_file=sys.stdout, input_file=None, argv=None):
     finally:
         sys.stdout = real_sys_stdout
 
-        if os.path.isfile(exec_filename):
-            os.remove(exec_filename)
+        if exec_filename is not None and exec_filename.exists():
+            exec_filename.unlink()
 
     return ret
