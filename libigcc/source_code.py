@@ -10,6 +10,7 @@ int main(void) {
 }
 """.strip()
 
+
 def get_full_source(runner):
     return (source_code
             .replace("$user_input", runner.get_user_commands_string())

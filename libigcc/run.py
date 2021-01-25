@@ -17,7 +17,8 @@ from colors import colorize
 
 readline.parse_and_bind('tab: complete')
 
-config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../config/config.yaml')
+config_path = os.path.join(os.path.dirname(
+    os.path.abspath(__file__)), '../config/config.yaml')
 config = argparse.Namespace(**yaml.safe_load(open(config_path)))
 
 incl_re = re.compile(r"\s*#\s*include\s")
@@ -58,7 +59,8 @@ def get_tmp_filename():
 
 def append_multiple(single_cmd, cmdlist, ret):
     if cmdlist is not None:
-        ret += [cmd_part.replace("$cmd", cmd) for cmd_part in single_cmd for cmd in cmdlist]
+        ret += [cmd_part.replace("$cmd", cmd)
+                for cmd_part in single_cmd for cmd in cmdlist]
 
 
 def get_compiler_command(options, out_filename):
@@ -66,7 +68,8 @@ def get_compiler_command(options, out_filename):
 
     for part in config.compiler_cmd.split():
         if part == "$include_dirs":
-            append_multiple(config.include_dir_cmd.split(), options.INCLUDE, ret)
+            append_multiple(config.include_dir_cmd.split(),
+                            options.INCLUDE, ret)
         elif part == "$lib_dirs":
             append_multiple(config.lib_dir_cmd.split(), options.LIBDIR, ret)
         elif part == "$libs":
@@ -106,8 +109,8 @@ def run_compile(subs_compiler_command, runner):
 
 def run_exec(file_name):
     return subprocess.Popen(file_name,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE).communicate()
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE).communicate()
 
 
 class UserInput:
@@ -148,10 +151,11 @@ class Runner:
 
     def do_run(self):
         read_line = create_read_line_function(self.input_file, config.prompt)
-        subs_compiler_command = get_compiler_command(self.options, self.exec_filename)
+        subs_compiler_command = get_compiler_command(
+            self.options, self.exec_filename)
 
         while True:
-            inp = read_line(self.input_num + 1) # 1-indexed
+            inp = read_line(self.input_num + 1)  # 1-indexed
             if inp is None:
                 break
 
@@ -161,7 +165,11 @@ class Runner:
                 if self.input_num < len(self.user_input):
                     self.user_input = self.user_input[: self.input_num]
 
-                typ = [UserInput.COMMAND, UserInput.INCLUDE][incl_re.match(inp) is not None]
+                if incl_re.match(inp) is None:
+                    typ = UserInput.COMMAND
+                else:
+                    typ = UserInput.INCLUDE
+
                 self.user_input.append(UserInput(inp, typ))
                 self.input_num += 1
 
@@ -233,18 +241,19 @@ def parse_args(argv):
     parser = OptionParser()
 
     parser.add_option("-I", "", dest="INCLUDE", action="append",
-        help="Add INCLUDE to the list of directories to " +
-             "be searched for header files.")
+                      help="Add INCLUDE to the list of directories to " +
+                      "be searched for header files.")
     parser.add_option("-L", "", dest="LIBDIR", action="append",
-        help="Add LIBDIR to the list of directories to " +
-             "be searched for library files.")
+                      help="Add LIBDIR to the list of directories to " +
+                      "be searched for library files.")
     parser.add_option("-l", "", dest="LIB", action="append",
-        help="Search the library LIB when linking.")
+                      help="Search the library LIB when linking.")
 
     options, args = parser.parse_args(argv)
 
     if len(args) > 0:
-        parser.error("Unrecognised arguments :" + " ".join(arg for arg in args))
+        parser.error("Unrecognised arguments :" +
+                     " ".join(arg for arg in args))
 
     return options
 
