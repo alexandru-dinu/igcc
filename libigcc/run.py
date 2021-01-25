@@ -22,12 +22,14 @@ config = argparse.Namespace(**yaml.safe_load(open(config_path)))
 
 incl_re = re.compile(r"\s*#\s*include\s")
 
+
 def read_line_from_stdin(prompt, n):
     prompt = colorize(f'[{n:3d}] {prompt}', 'green')
     try:
         return input(prompt).rstrip()
     except EOFError:
         return None
+
 
 def read_line_from_file(input_file, prompt, n):
     prompt = colorize(f'[{n:3d}] {prompt}', 'green')
@@ -39,11 +41,13 @@ def read_line_from_file(input_file, prompt, n):
 
     return line
 
+
 def create_read_line_function(input_file, prompt):
     if input_file is None:
         return lambda n: read_line_from_stdin(prompt, n)
     else:
         return lambda n: read_line_from_file(input_file, prompt, n)
+
 
 def get_tmp_filename():
     outfile = tempfile.NamedTemporaryFile(prefix='igcc-tmp')
@@ -51,9 +55,11 @@ def get_tmp_filename():
     outfile.close()
     return outfilename
 
+
 def append_multiple(single_cmd, cmdlist, ret):
     if cmdlist is not None:
         ret += [cmd_part.replace("$cmd", cmd) for cmd_part in single_cmd for cmd in cmdlist]
+
 
 def get_compiler_command(options, out_filename):
     ret = []
@@ -69,6 +75,7 @@ def get_compiler_command(options, out_filename):
             ret.append(part.replace("$outfile", out_filename))
 
     return ret
+
 
 def run_compile(subs_compiler_command, runner):
     src = source_code.get_full_source(runner)
@@ -96,10 +103,12 @@ def run_compile(subs_compiler_command, runner):
 
     return out
 
+
 def run_exec(file_name):
     return subprocess.Popen(file_name,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE).communicate()
+
 
 class UserInput:
     INCLUDE = 0
@@ -125,6 +134,7 @@ class UserInput:
     def __ne__(self, other):
         return not self.__eq__(other)
 
+
 class Runner:
     def __init__(self, options, input_file, exec_filename):
         self.options = options
@@ -141,7 +151,7 @@ class Runner:
         subs_compiler_command = get_compiler_command(self.options, self.exec_filename)
 
         while True:
-            inp = read_line(self.input_num)
+            inp = read_line(self.input_num + 1) # 1-indexed
             if inp is None:
                 break
 
@@ -218,6 +228,7 @@ class Runner:
     def get_user_includes_string(self):
         return "\n".join(self.get_user_includes()) + "\n"
 
+
 def parse_args(argv):
     parser = OptionParser()
 
@@ -236,6 +247,7 @@ def parse_args(argv):
         parser.error("Unrecognised arguments :" + " ".join(arg for arg in args))
 
     return options
+
 
 def run(output_file=sys.stdout, input_file=None, argv=None):
     real_sys_stdout = sys.stdout
