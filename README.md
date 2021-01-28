@@ -8,7 +8,7 @@
 
 - Interactive GCC (igcc) is a read-eval-print loop (REPL) for C/C++
 - A default [`libigcc/boilerplate.h`](https://github.com/alexandru-dinu/igcc/blob/master/libigcc/boilerplate.h) header is included, with `<bits/stdc++.h>`, `using namespace std;`, and some helper functions
-- For configuration (mainly related to compiling) see [`config/config.yaml`](https://github.com/alexandru-dinu/igcc/blob/master/config/config.yaml)
+- For configuration (mainly related to compiling) see [`config.yaml`](https://github.com/alexandru-dinu/igcc/blob/master/config.yaml)
 
 ## Running
 
