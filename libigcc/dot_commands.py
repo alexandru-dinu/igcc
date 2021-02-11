@@ -15,8 +15,10 @@ def dot_q(runner):
 
 
 def dot_l(runner):
-    print("%s\n%s" % (runner.get_user_includes_string(),
-                      runner.get_user_commands_string()))
+    print(
+        "%s\n%s"
+        % (runner.get_user_includes_string(), runner.get_user_commands_string())
+    )
     return False, False
 
 

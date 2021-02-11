@@ -12,6 +12,6 @@ int main(void) {
 
 
 def get_full_source(runner):
-    return (source_code
-            .replace("$user_input", runner.get_user_commands_string())
-            .replace("$user_includes", runner.get_user_includes_string()))
+    return source_code.replace(
+        "$user_input", runner.get_user_commands_string()
+    ).replace("$user_includes", runner.get_user_includes_string())

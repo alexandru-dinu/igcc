@@ -14,17 +14,17 @@ import dot_commands
 import source_code
 from colors import colorize
 
-readline.parse_and_bind('tab: complete')
+readline.parse_and_bind("tab: complete")
 
-cfg_path = Path(__file__).resolve().parents[1] / 'config.yaml'
-with open(cfg_path, 'rt') as fp:
+cfg_path = Path(__file__).resolve().parents[1] / "config.yaml"
+with open(cfg_path, "rt") as fp:
     config = argparse.Namespace(**yaml.safe_load(fp))
 
 incl_re = re.compile(r"\s*#\s*include\s")
 
 
 def read_line_from_stdin(prompt, n):
-    prompt = colorize(f'[{n:3d}] {prompt}', 'green')
+    prompt = colorize(f"[{n:3d}] {prompt}", "green")
     try:
         return input(prompt).rstrip()
     except EOFError:
@@ -32,7 +32,7 @@ def read_line_from_stdin(prompt, n):
 
 
 def read_line_from_file(input_file, prompt, n):
-    prompt = colorize(f'[{n:3d}] {prompt}', 'green')
+    prompt = colorize(f"[{n:3d}] {prompt}", "green")
     sys.stdout.write(prompt)
     line = input_file.readline()
 
@@ -50,7 +50,7 @@ def create_read_line_function(input_file, prompt):
 
 
 def get_tmp_filename():
-    outfile = tempfile.NamedTemporaryFile(prefix='igcc-tmp')
+    outfile = tempfile.NamedTemporaryFile(prefix="igcc-tmp")
     outfilename = outfile.name
     outfile.close()
     return outfilename
@@ -58,8 +58,9 @@ def get_tmp_filename():
 
 def append_multiple(single_cmd, cmdlist, ret):
     if cmdlist is not None:
-        ret += [cmd_part.replace("$cmd", cmd)
-                for cmd_part in single_cmd for cmd in cmdlist]
+        ret += [
+            cmd_part.replace("$cmd", cmd) for cmd_part in single_cmd for cmd in cmdlist
+        ]
 
 
 def get_compiler_command(options, out_filename):
@@ -67,8 +68,7 @@ def get_compiler_command(options, out_filename):
 
     for part in config.compiler_cmd.split():
         if part == "$include_dirs":
-            append_multiple(config.include_dir_cmd.split(),
-                            options.INCLUDE, ret)
+            append_multiple(config.include_dir_cmd.split(), options.INCLUDE, ret)
         elif part == "$lib_dirs":
             append_multiple(config.lib_dir_cmd.split(), options.LIBDIR, ret)
         elif part == "$libs":
@@ -84,15 +84,17 @@ def run_compile(subs_compiler_command, runner):
 
     compile_process = subprocess.Popen(
         subs_compiler_command,
-        stdin=subprocess.PIPE, stderr=subprocess.PIPE,
-        encoding='utf8')
+        stdin=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        encoding="utf8",
+    )
 
     stdout_data, stderr_data = compile_process.communicate(input=src)
 
     if compile_process.returncode == 0:
         return None
 
-    out = ''
+    out = ""
 
     if stdout_data is not None:
         out += stdout_data
@@ -100,16 +102,16 @@ def run_compile(subs_compiler_command, runner):
     if stderr_data is not None:
         out += stderr_data
 
-    if out == '':
+    if out == "":
         return "Unknown compile error - compiler did not write any output."
 
     return out
 
 
 def run_exec(file_name):
-    return subprocess.Popen(file_name,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE).communicate()
+    return subprocess.Popen(
+        file_name, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    ).communicate()
 
 
 class UserInput:
@@ -126,12 +128,14 @@ class UserInput:
         return f"UserInput( {self.inp}, {self.typ}, {self.output_chars}, {self.error_chars} )"
 
     def __eq__(self, other):
-        return all([
-            self.inp == other.inp,
-            self.typ == other.typ,
-            self.output_chars == other.output_chars,
-            self.error_chars == other.error_chars,
-        ])
+        return all(
+            [
+                self.inp == other.inp,
+                self.typ == other.typ,
+                self.output_chars == other.output_chars,
+                self.error_chars == other.error_chars,
+            ]
+        )
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -150,8 +154,7 @@ class Runner:
 
     def do_run(self):
         read_line = create_read_line_function(self.input_file, config.prompt)
-        subs_compiler_command = get_compiler_command(
-            self.options, self.exec_filename)
+        subs_compiler_command = get_compiler_command(self.options, self.exec_filename)
 
         while True:
             inp = read_line(self.input_num + 1)  # 1-indexed
@@ -176,26 +179,26 @@ class Runner:
                 self.compile_error = run_compile(subs_compiler_command, self)
 
                 if self.compile_error is not None:
-                    info = 'Compile error - type .e to see it OR disregard if multi-line statement(s)\n'
-                    print(colorize(info, 'magenta'))
+                    info = "Compile error - type .e to see it OR disregard if multi-line statement(s)\n"
+                    print(colorize(info, "magenta"))
                     continue
 
                 stdout_data, stderr_data = run_exec(self.exec_filename)
 
                 if len(stdout_data) > self.output_chars_printed:
-                    new_output = stdout_data[self.output_chars_printed:]
+                    new_output = stdout_data[self.output_chars_printed :]
                     len_new_output = len(new_output)
 
-                    print(new_output.decode('utf8'))
+                    print(new_output.decode("utf8"))
 
                     self.output_chars_printed += len_new_output
                     self.user_input[-1].output_chars = len_new_output
 
                 if len(stderr_data) > self.error_chars_printed:
-                    new_error = stderr_data[self.error_chars_printed:]
+                    new_error = stderr_data[self.error_chars_printed :]
                     len_new_error = len(new_error)
 
-                    print(new_error.decode('utf8'))
+                    print(new_error.decode("utf8"))
 
                     self.error_chars_printed += len_new_error
                     self.user_input[-1].error_chars = len_new_error
@@ -224,10 +227,16 @@ class Runner:
         return itertools.islice(self.user_input, 0, self.input_num)
 
     def get_user_commands(self):
-        return (a.inp for a in filter(lambda a: a.typ == UserInput.COMMAND, self.get_user_input()))
+        return (
+            a.inp
+            for a in filter(lambda a: a.typ == UserInput.COMMAND, self.get_user_input())
+        )
 
     def get_user_includes(self):
-        return (a.inp for a in filter(lambda a: a.typ == UserInput.INCLUDE, self.get_user_input()))
+        return (
+            a.inp
+            for a in filter(lambda a: a.typ == UserInput.INCLUDE, self.get_user_input())
+        )
 
     def get_user_commands_string(self):
         return "\n".join(self.get_user_commands()) + "\n"
@@ -239,20 +248,34 @@ class Runner:
 def parse_args(argv):
     parser = OptionParser()
 
-    parser.add_option("-I", "", dest="INCLUDE", action="append",
-                      help="Add INCLUDE to the list of directories to " +
-                      "be searched for header files.")
-    parser.add_option("-L", "", dest="LIBDIR", action="append",
-                      help="Add LIBDIR to the list of directories to " +
-                      "be searched for library files.")
-    parser.add_option("-l", "", dest="LIB", action="append",
-                      help="Search the library LIB when linking.")
+    parser.add_option(
+        "-I",
+        "",
+        dest="INCLUDE",
+        action="append",
+        help="Add INCLUDE to the list of directories to "
+        + "be searched for header files.",
+    )
+    parser.add_option(
+        "-L",
+        "",
+        dest="LIBDIR",
+        action="append",
+        help="Add LIBDIR to the list of directories to "
+        + "be searched for library files.",
+    )
+    parser.add_option(
+        "-l",
+        "",
+        dest="LIB",
+        action="append",
+        help="Search the library LIB when linking.",
+    )
 
     options, args = parser.parse_args(argv)
 
     if len(args) > 0:
-        parser.error("Unrecognised arguments :" +
-                     " ".join(arg for arg in args))
+        parser.error("Unrecognised arguments :" + " ".join(arg for arg in args))
 
     return options
 
