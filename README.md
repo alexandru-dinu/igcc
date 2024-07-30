@@ -2,7 +2,6 @@
 
 [![workflow](https://github.com/alexandru-dinu/igcc/workflows/CI/badge.svg)](https://github.com/alexandru-dinu/igcc/actions?query=workflow%3ACI)
 [![contrib](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/alexandru-dinu/igcc/issues)
-[![gitpod](https://img.shields.io/badge/Gitpod-Ready--to--Code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/alexandru-dinu/igcc)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 **NOTE**: This is forked from https://sourceforge.net/projects/igcc/. I have done some refactoring and ported it to Python 3.7. I am currently maintaining it.
