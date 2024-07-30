@@ -1,6 +1,6 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-IGCC="python ../../igcc -I../../libigcc"
+IGCC="igcc"
 
 function test_lib_dir() {
 	# make static lib

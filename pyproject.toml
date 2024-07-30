@@ -1,0 +1,40 @@
+# this is the default behaviour (can be omitted)
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "igcc"
+version = "0.1.0"
+description = "Interactive GCC - C/C++ REPL"
+readme = "README.md"
+requires-python = ">=3.9"
+
+dependencies = ["PyYAML"]
+
+[project.optional-dependencies]
+dev = ["black", "isort", "autoflake", "ruff"]
+
+[project.scripts]
+igcc = "igcc.run:repl"
+
+[tool.setuptools.package-data]
+igcc = ["assets/*"]
+
+[tool.ruff]
+# Exclude a variety of commonly ignored directories.
+exclude = [
+    ".git",
+    ".ipynb_checkpoints",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    "venv",
+    "build",
+]
+line-length = 100
+indent-width = 4
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F"]
+ignore = []

@@ -1,4 +1,4 @@
-import source_code
+from igcc.source_code import get_full_source
 
 
 class IGCCQuitException(Exception):
@@ -15,15 +15,12 @@ def dot_q(runner):
 
 
 def dot_l(runner):
-    print(
-        "%s\n%s"
-        % (runner.get_user_includes_string(), runner.get_user_commands_string())
-    )
+    print("%s\n%s" % (runner.get_user_includes_string(), runner.get_user_commands_string()))
     return False, False
 
 
 def dot_L(runner):
-    print(source_code.get_full_source(runner))
+    print(get_full_source(runner))
     return False, False
 
 

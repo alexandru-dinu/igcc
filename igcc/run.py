@@ -5,19 +5,23 @@ import readline
 import subprocess
 import sys
 import tempfile
-from optparse import OptionParser
+from importlib import resources
 from pathlib import Path
 
 import yaml
 
-import dot_commands
-import source_code
-from colors import colorize
+import igcc.dot_commands
+import igcc.source_code
+from igcc.colors import colorize
 
 readline.parse_and_bind("tab: complete")
 
-cfg_path = Path(__file__).resolve().parents[1] / "config.yaml"
-with open(cfg_path, "rt") as fp:
+
+def get_asset_dir() -> Path:
+    return resources.files("igcc").joinpath("assets")
+
+
+with open(get_asset_dir() / "config.yaml", "rt") as fp:
     config = argparse.Namespace(**yaml.safe_load(fp))
 
 incl_re = re.compile(r"\s*#\s*include\s")
@@ -58,21 +62,19 @@ def get_tmp_filename():
 
 def append_multiple(single_cmd, cmdlist, ret):
     if cmdlist is not None:
-        ret += [
-            cmd_part.replace("$cmd", cmd) for cmd_part in single_cmd for cmd in cmdlist
-        ]
+        ret += [cmd_part.replace("$cmd", cmd) for cmd_part in single_cmd for cmd in cmdlist]
 
 
-def get_compiler_command(options, out_filename):
+def get_compiler_command(args, out_filename):
     ret = []
 
     for part in config.compiler_cmd.split():
         if part == "$include_dirs":
-            append_multiple(config.include_dir_cmd.split(), options.INCLUDE, ret)
+            append_multiple(config.include_dir_cmd.split(), args.INCLUDE, ret)
         elif part == "$lib_dirs":
-            append_multiple(config.lib_dir_cmd.split(), options.LIBDIR, ret)
+            append_multiple(config.lib_dir_cmd.split(), args.LIBDIR, ret)
         elif part == "$libs":
-            append_multiple(config.lib_cmd.split(), options.LIB, ret)
+            append_multiple(config.lib_cmd.split(), args.LIB, ret)
         else:
             ret.append(part.replace("$outfile", out_filename))
 
@@ -80,7 +82,7 @@ def get_compiler_command(options, out_filename):
 
 
 def run_compile(subs_compiler_command, runner):
-    src = source_code.get_full_source(runner)
+    src = igcc.source_code.get_full_source(runner)
 
     compile_process = subprocess.Popen(
         subs_compiler_command,
@@ -109,9 +111,7 @@ def run_compile(subs_compiler_command, runner):
 
 
 def run_exec(file_name):
-    return subprocess.Popen(
-        file_name, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-    ).communicate()
+    return subprocess.Popen(file_name, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
 
 
 class UserInput:
@@ -142,8 +142,8 @@ class UserInput:
 
 
 class Runner:
-    def __init__(self, options, input_file, exec_filename):
-        self.options = options
+    def __init__(self, args, input_file, exec_filename):
+        self.args = args
         self.input_file = input_file
         self.exec_filename = str(exec_filename)
         self.user_input = []
@@ -154,14 +154,14 @@ class Runner:
 
     def do_run(self):
         read_line = create_read_line_function(self.input_file, config.prompt)
-        subs_compiler_command = get_compiler_command(self.options, self.exec_filename)
+        subs_compiler_command = get_compiler_command(self.args, self.exec_filename)
 
         while True:
             inp = read_line(self.input_num + 1)  # 1-indexed
             if inp is None:
                 break
 
-            col_inp, run_compiler = dot_commands.process(inp, self)
+            col_inp, run_compiler = igcc.dot_commands.process(inp, self)
 
             if col_inp:
                 if self.input_num < len(self.user_input):
@@ -227,16 +227,10 @@ class Runner:
         return itertools.islice(self.user_input, 0, self.input_num)
 
     def get_user_commands(self):
-        return (
-            a.inp
-            for a in filter(lambda a: a.typ == UserInput.COMMAND, self.get_user_input())
-        )
+        return (a.inp for a in filter(lambda a: a.typ == UserInput.COMMAND, self.get_user_input()))
 
     def get_user_includes(self):
-        return (
-            a.inp
-            for a in filter(lambda a: a.typ == UserInput.INCLUDE, self.get_user_input())
-        )
+        return (a.inp for a in filter(lambda a: a.typ == UserInput.INCLUDE, self.get_user_input()))
 
     def get_user_commands_string(self):
         return "\n".join(self.get_user_commands()) + "\n"
@@ -246,60 +240,53 @@ class Runner:
 
 
 def parse_args(argv):
-    parser = OptionParser()
+    parser = argparse.ArgumentParser()
 
-    parser.add_option(
+    parser.add_argument(
         "-I",
-        "",
+        nargs="+",
         dest="INCLUDE",
-        action="append",
-        help="Add INCLUDE to the list of directories to "
-        + "be searched for header files.",
+        help="Add INCLUDE to the list of directories to be searched for header files.",
+        default=list(),
     )
-    parser.add_option(
+    parser.add_argument(
         "-L",
-        "",
+        nargs="+",
         dest="LIBDIR",
-        action="append",
-        help="Add LIBDIR to the list of directories to "
-        + "be searched for library files.",
+        help="Add LIBDIR to the list of directories to be searched for library files.",
     )
-    parser.add_option(
+    parser.add_argument(
         "-l",
-        "",
+        nargs="+",
         dest="LIB",
-        action="append",
         help="Search the library LIB when linking.",
     )
 
-    options, args = parser.parse_args(argv)
+    args = parser.parse_args(argv)
 
-    if len(args) > 0:
-        parser.error("Unrecognised arguments :" + " ".join(arg for arg in args))
+    # make default asset dir available as include dir, as it defines `boilerplate.h`
+    args.INCLUDE.insert(0, str(get_asset_dir()))
 
-    return options
+    return args
 
 
-def run(output_file=sys.stdout, input_file=None, argv=None):
-    real_sys_stdout = sys.stdout
-    sys.stdout = output_file
+# ENTRYPOINT
+def repl():
     exec_filename = None
 
     try:
         try:
-            options = parse_args(argv)
+            args = parse_args(sys.argv[1:])
 
             exec_filename = Path(get_tmp_filename())
             ret = "normal"
 
-            Runner(options, input_file, exec_filename).do_run()
+            Runner(args, input_file=None, exec_filename=exec_filename).do_run()
 
-        except (dot_commands.IGCCQuitException, KeyboardInterrupt):
+        except (igcc.dot_commands.IGCCQuitException, KeyboardInterrupt):
             ret = "quit"
 
     finally:
-        sys.stdout = real_sys_stdout
-
         if exec_filename is not None and exec_filename.exists():
             exec_filename.unlink()
 

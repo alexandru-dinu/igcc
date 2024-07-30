@@ -4,20 +4,25 @@
 [![contrib](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/alexandru-dinu/igcc/issues)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-**NOTE**: This is forked from https://sourceforge.net/projects/igcc/. I have done some refactoring and ported it to Python 3.7. I am currently maintaining it.
+**NOTE**: This is forked from https://sourceforge.net/projects/igcc/. I've done some refactoring and I'm currently maintaining it.
 
 - Interactive GCC (igcc) is a read-eval-print loop (REPL) for C/C++
-- A default [`libigcc/boilerplate.h`](https://github.com/alexandru-dinu/igcc/blob/master/libigcc/boilerplate.h) header is included, with `<bits/stdc++.h>`, `using namespace std;`, and some helper functions
-- For configuration (mainly related to compiling) see [`config.yaml`](https://github.com/alexandru-dinu/igcc/blob/master/config.yaml)
+- A default [`boilerplate.h`](https://github.com/alexandru-dinu/igcc/blob/main/igcc/assets/boilerplate.h) header is included, with `<bits/stdc++.h>`, `using namespace std;`, and some helper functions
+- For configuration (mainly related to compiling) see [`config.yaml`](https://github.com/alexandru-dinu/igcc/blob/main/igcc/assets/config.yaml)
 
 ## Running
 
+Optionally, first create a new python virtual environment, then:
 ```bash
-git clone https://github.com/alexandru-dinu/igcc.git
-cd igcc
-pip install -r requirements.txt
-./igcc -I libigcc
+pip3 install git+https://github.com/alexandru-dinu/igcc.git
 ```
+Now you can run the REPL with:
+```
+igcc
+```
+By default, the [`assets/`](https://github.com/alexandru-dinu/igcc/tree/main/igcc/assets) include dir will be available, exporting `boilerplate.h`.
+
+For all available args, use: `igcc --help`.
 
 The code will be compiled with GCC and the results (if any) will be displayed.
 Type `.h` for help:
@@ -38,7 +43,7 @@ Type `.h` for help:
 Simple usage:
 
 ```
-$ ./igcc -I libigcc
+$ igcc
 [  1] igcc> int a = 5;
 [  2] igcc> a += 2;
 [  3] igcc> cout << a << endl;
@@ -51,7 +56,7 @@ $ ./igcc -I libigcc
 Include header files:
 
 ```
-$ ./igcc -I libigcc
+$ igcc
 [  1] igcc> #include <vector>
 [  2] igcc> vector<int> xs = {1,2,3};
 [  3] igcc> xs.push_back(17);
@@ -63,7 +68,7 @@ $ ./igcc -I libigcc
 Compile errors can be tolerated until the code works:
 
 ```
-$ ./igcc
+$ igcc
 [  1] igcc> for (int i = 0; i < 10; i++) {
 Compile error - type .e to see it OR disregard if multi-line statement(s)
 
@@ -77,7 +82,7 @@ Compile error - type .e to see it OR disregard if multi-line statement(s)
 Libs can be linked:
 
 ```
-$ ./igcc -I libigcc -lpthread
+$ igcc -lpthread
 [  1] igcc> #include <pthread.h>
 [  2] igcc> pthread_t thr;
 [  3] igcc> const char* msg = "Hello, World!";
