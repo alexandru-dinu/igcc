@@ -4,7 +4,9 @@
 [![contrib](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/alexandru-dinu/igcc/issues)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-**NOTE**: This is forked from https://sourceforge.net/projects/igcc/. I've done some refactoring and I'm currently maintaining it.
+> [!NOTE]
+> The original repo from Andy Balaam is here: https://codeberg.org/andybalaam/igcc.
+> In this fork, I've done some refactoring and tried to make it easier to use.
 
 - Interactive GCC (igcc) is a read-eval-print loop (REPL) for C/C++
 - A default [`boilerplate.h`](https://github.com/alexandru-dinu/igcc/blob/main/igcc/assets/boilerplate.h) header is included, with `<bits/stdc++.h>`, `using namespace std;`, and some helper functions
