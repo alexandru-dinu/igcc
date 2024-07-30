@@ -13,16 +13,28 @@
 ## Running
 
 Optionally, first create a new python virtual environment, then:
-```bash
+```console
 pip3 install git+https://github.com/alexandru-dinu/igcc.git
 ```
 Now you can run the REPL with:
-```
+```console
 igcc
 ```
 By default, the [`assets/`](https://github.com/alexandru-dinu/igcc/tree/main/igcc/assets) include dir will be available, exporting `boilerplate.h`.
 
-For all available args, use: `igcc --help`.
+For all available args:
+```console
+$ igcc --help
+usage: igcc [-h] [-I INCLUDE [INCLUDE ...]] [-L LIBDIR [LIBDIR ...]] [-l LIB [LIB ...]]
+
+options:
+  -h, --help            show this help message and exit
+  -I INCLUDE [INCLUDE ...]
+                        Add INCLUDE to the list of directories to be searched for header files.
+  -L LIBDIR [LIBDIR ...]
+                        Add LIBDIR to the list of directories to be searched for library files.
+  -l LIB [LIB ...]      Search the library LIB when linking.
+```
 
 The code will be compiled with GCC and the results (if any) will be displayed.
 Type `.h` for help:
