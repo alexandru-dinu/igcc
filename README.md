@@ -28,7 +28,7 @@ The code will be compiled with GCC and the results (if any) will be displayed.
 Type `.h` for help:
 
 ```
-[  1] igcc> .h
+[  1] > .h
 .L List the whole program as given to the compiler
 .e Show the last compile errors/warnings
 .h Show this help message
@@ -44,12 +44,12 @@ Simple usage:
 
 ```
 $ igcc
-[  1] igcc> int a = 5;
-[  2] igcc> a += 2;
-[  3] igcc> cout << a << endl;
+[  1] > int a = 5;
+[  2] > a += 2;
+[  3] > cout << a << endl;
 7
-[  4] igcc> --a;
-[  5] igcc> cout << a << endl;
+[  4] > --a;
+[  5] > cout << a << endl;
 6
 ```
 
@@ -57,11 +57,11 @@ Include header files:
 
 ```
 $ igcc
-[  1] igcc> #include <vector>
-[  2] igcc> vector<int> xs = {1,2,3};
-[  3] igcc> xs.push_back(17);
-[  4] igcc> xs.pop_back();
-[  5] igcc> printf("%u", xs.size());
+[  1] > #include <vector>
+[  2] > vector<int> xs = {1,2,3};
+[  3] > xs.push_back(17);
+[  4] > xs.pop_back();
+[  5] > printf("%u", xs.size());
 3
 ```
 
@@ -69,13 +69,13 @@ Compile errors can be tolerated until the code works:
 
 ```
 $ igcc
-[  1] igcc> for (int i = 0; i < 10; i++) {
+[  1] > for (int i = 0; i < 10; i++) {
 Compile error - type .e to see it OR disregard if multi-line statement(s)
 
-[  2] igcc> cout << i << " ";
+[  2] > cout << i << " ";
 Compile error - type .e to see it OR disregard if multi-line statement(s)
 
-[  3] igcc> }
+[  3] > }
 0 1 2 3 4 5 6 7 8 9
 ```
 
@@ -83,11 +83,11 @@ Libs can be linked:
 
 ```
 $ igcc -lpthread
-[  1] igcc> #include <pthread.h>
-[  2] igcc> pthread_t thr;
-[  3] igcc> const char* msg = "Hello, World!";
-[  4] igcc> // assuming print_msg is defined somewhere
-[  5] igcc> int ret = pthread_create(&thr, NULL, print_msg, (void*) msg); pthread_join(thr, NULL);
+[  1] > #include <pthread.h>
+[  2] > pthread_t thr;
+[  3] > const char* msg = "Hello, World!";
+[  4] > // assuming print_msg is defined somewhere
+[  5] > int ret = pthread_create(&thr, NULL, print_msg, (void*) msg); pthread_join(thr, NULL);
 Hello, World!
 ```
 
