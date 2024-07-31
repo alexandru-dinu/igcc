@@ -57,26 +57,30 @@ class Runner:
 
     def do_run(self):
         while True:
-            inp = igcc.utils.readline_from_stdin(CONFIG.prompt, self.input_num + 1)
+            inp = igcc.utils.read_from_stdin(
+                CONFIG.prompt, self.input_num + 1, CONFIG.multiline_marker
+            )
             if inp is None:
                 break
 
-            col_inp, run_compiler = self.process(inp)
+            # input is joined when sent to the compiler
+            # to avoid repeated calls to the compiler for multiline
+            # however, each line (UserInput) is accounted for separately
+            col_inp, run_compiler = self.process("\n".join(inp))
 
             if col_inp:
                 if self.input_num < len(self.user_input):
                     self.user_input = self.user_input[: self.input_num]
 
-                self.user_input.append(UserInput(inp, is_include=INCL_RE.match(inp) is not None))
-                self.input_num += 1
+                new_inp = [UserInput(x, is_include=INCL_RE.match(x) is not None) for x in inp]
+                self.user_input += new_inp
+                self.input_num += len(new_inp)
 
             if run_compiler:
                 self.compile_error = self.run_compile()
 
                 if self.compile_error is not None:
-                    print(
-                        "[red] Compile error - type .e to see it OR disregard if multi-line statement(s)\n [/red]"
-                    )
+                    print("[red] Compile error - type .e to see it\n [/red]")
                     continue
 
                 # execute the compiled binary

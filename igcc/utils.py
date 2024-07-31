@@ -51,9 +51,23 @@ def run_exec(file_name) -> tuple:
     return subprocess.Popen(file_name, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
 
 
-def readline_from_stdin(prompt, n) -> str | None:
+def read_from_stdin(prompt: str, n: int, multiline_marker: str = ".m") -> list[str] | None:
     try:
-        return input(f"[{n}]{prompt}").rstrip()
+        first = input(f"[{n}]{prompt}").rstrip()
+
+        # not multiline input
+        if first != multiline_marker:
+            return [first]
+
+        # start multiline input
+        ret = []
+        while True:
+            if (line := input("... ")) == multiline_marker:
+                break
+            ret.append(line)
+
+        return ret
+
     except EOFError:
         return None
 
