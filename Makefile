@@ -11,3 +11,6 @@ format:
 	@autoflake --in-place --remove-all-unused-imports $(SRC) \
 		&& isort $(SRC) \
 		&& black --line-length 100 $(SRC)
+
+test:
+	@for f in `ls tests`; do (cd tests/$$f && ./run.sh); done
