@@ -138,7 +138,7 @@ $ igcc
 <stdin>:5:9: warning: unused variable ‘x’ [-Wunused-variable]
 
 [2]> .u
-Undone
+Undone `int x = 2`
 [1]> int x = 2;
 [2]> .L
 #include "boilerplate.h"
@@ -158,7 +158,7 @@ $ igcc
 [2]> std::cout << x;
 2
 [3]> .u
-Undone
+Undone `std::cout << x;`
 [2]> .L
 #include "boilerplate.h"
 
@@ -169,7 +169,7 @@ int main(void) {
     return 0;
 }
 [2]> .r
-Redone
+Redone `std::cout << x;`
 2
 [3]> .L
 #include "boilerplate.h"
@@ -177,7 +177,7 @@ Redone
 
 int main(void) {
     int x = 2;
-  std::cout << x;
+    std::cout << x;
 
     return 0;
 }

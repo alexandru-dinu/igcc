@@ -82,7 +82,9 @@ class Runner:
                     continue
 
                 # execute the compiled binary
-                stdout, stderr = igcc.utils.run_exec(self.exec_filename)
+                stdout, stderr = subprocess.Popen(
+                    self.exec_filename, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+                ).communicate()
 
                 if len(stdout) > self.output_chars_printed:
                     new_output = stdout[self.output_chars_printed :]
@@ -207,7 +209,7 @@ class Runner:
     def dot_r(self):
         redone_line = self.redo()
         if redone_line is not None:
-            print(f"[black on white]Redone [{redone_line}]")
+            print(f"[black on white]Redone `{redone_line}`")
             return False, True
 
         print("[black on white]Nothing to redo")
@@ -216,7 +218,7 @@ class Runner:
     def dot_u(self):
         undone_line = self.undo()
         if undone_line is not None:
-            print(f"[black on white]Undone [{undone_line}]")
+            print(f"[black on white]Undone `{undone_line}`")
         else:
             print("[black on white]Nothing to undo")
 

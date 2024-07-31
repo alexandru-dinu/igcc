@@ -1,5 +1,4 @@
 import argparse
-import subprocess
 import tempfile
 from importlib import resources
 from pathlib import Path
@@ -45,10 +44,6 @@ def get_tmp_filename() -> Path:
     outfilename = outfile.name
     outfile.close()
     return Path(outfilename)
-
-
-def run_exec(file_name) -> tuple:
-    return subprocess.Popen(file_name, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
 
 
 def read_from_stdin(prompt: str, n: int, multiline_marker: str = ".m") -> list[str] | None:
