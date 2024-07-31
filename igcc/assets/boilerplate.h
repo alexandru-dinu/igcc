@@ -1,10 +1,8 @@
 #include <iostream>
 #include <bits/stdc++.h>
 
-using namespace std;
-
 template <typename T>
-void print_vector(const vector<T>& xs) {
+void print_vector(const std::vector<T>& xs) {
     for (const T& x : xs)
-        cout << x << endl;
+        std::cout << x << std::endl;
 }

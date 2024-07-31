@@ -9,7 +9,7 @@
 > In this fork, I've done some refactoring and tried to make it easier to use.
 
 - Interactive GCC (igcc) is a read-eval-print loop (REPL) for C/C++
-- A default [`boilerplate.h`](https://github.com/alexandru-dinu/igcc/blob/main/igcc/assets/boilerplate.h) header is included, with `<bits/stdc++.h>`, `using namespace std;`, and some helper functions
+- A default [`boilerplate.h`](https://github.com/alexandru-dinu/igcc/blob/main/igcc/assets/boilerplate.h) header is included
 - For configuration (mainly related to compiling) see [`config.yaml`](https://github.com/alexandru-dinu/igcc/blob/main/igcc/assets/config.yaml)
 
 ## Running

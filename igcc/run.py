@@ -4,141 +4,41 @@ import re
 import readline
 import subprocess
 import sys
-import tempfile
-from importlib import resources
-from pathlib import Path
+from dataclasses import dataclass
 
 import yaml
+from rich import print
 
-import igcc.dot_commands
-import igcc.source_code
-from igcc.colors import colorize
+import igcc.utils
 
 readline.parse_and_bind("tab: complete")
 
 
-def get_asset_dir() -> Path:
-    return resources.files("igcc").joinpath("assets")
+with open(igcc.utils.get_asset_dir() / "config.yaml") as fp:
+    CONFIG = argparse.Namespace(**yaml.safe_load(fp))
+
+INCL_RE = re.compile(r"\s*#\s*include\s")
+
+SOURCE_CODE = """
+#include "boilerplate.h"
+$user_includes
+int main(void) {
+    $user_input
+    return 0;
+}
+""".strip()
 
 
-with open(get_asset_dir() / "config.yaml", "rt") as fp:
-    config = argparse.Namespace(**yaml.safe_load(fp))
-
-incl_re = re.compile(r"\s*#\s*include\s")
+class IGCCQuitException(Exception):
+    pass
 
 
-def read_line_from_stdin(prompt, n):
-    prompt = colorize(f"[{n:3d}] {prompt}", "green")
-    try:
-        return input(prompt).rstrip()
-    except EOFError:
-        return None
-
-
-def read_line_from_file(input_file, prompt, n):
-    prompt = colorize(f"[{n:3d}] {prompt}", "green")
-    sys.stdout.write(prompt)
-    line = input_file.readline()
-
-    if line is not None:
-        print(line)
-
-    return line
-
-
-def create_read_line_function(input_file, prompt):
-    if input_file is None:
-        return lambda n: read_line_from_stdin(prompt, n)
-    else:
-        return lambda n: read_line_from_file(input_file, prompt, n)
-
-
-def get_tmp_filename():
-    outfile = tempfile.NamedTemporaryFile(prefix="igcc-tmp")
-    outfilename = outfile.name
-    outfile.close()
-    return outfilename
-
-
-def append_multiple(single_cmd, cmdlist, ret):
-    if cmdlist is not None:
-        ret += [cmd_part.replace("$cmd", cmd) for cmd_part in single_cmd for cmd in cmdlist]
-
-
-def get_compiler_command(args, out_filename):
-    ret = []
-
-    for part in config.compiler_cmd.split():
-        if part == "$include_dirs":
-            append_multiple(config.include_dir_cmd.split(), args.INCLUDE, ret)
-        elif part == "$lib_dirs":
-            append_multiple(config.lib_dir_cmd.split(), args.LIBDIR, ret)
-        elif part == "$libs":
-            append_multiple(config.lib_cmd.split(), args.LIB, ret)
-        else:
-            ret.append(part.replace("$outfile", out_filename))
-
-    return ret
-
-
-def run_compile(subs_compiler_command, runner):
-    src = igcc.source_code.get_full_source(runner)
-
-    compile_process = subprocess.Popen(
-        subs_compiler_command,
-        stdin=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        encoding="utf8",
-    )
-
-    stdout_data, stderr_data = compile_process.communicate(input=src)
-
-    if compile_process.returncode == 0:
-        return None
-
-    out = ""
-
-    if stdout_data is not None:
-        out += stdout_data
-
-    if stderr_data is not None:
-        out += stderr_data
-
-    if out == "":
-        return "Unknown compile error - compiler did not write any output."
-
-    return out
-
-
-def run_exec(file_name):
-    return subprocess.Popen(file_name, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
-
-
+@dataclass
 class UserInput:
-    INCLUDE = 0
-    COMMAND = 1
-
-    def __init__(self, inp, typ):
-        self.inp = inp
-        self.typ = typ
-        self.output_chars = 0
-        self.error_chars = 0
-
-    def __str__(self):
-        return f"UserInput( {self.inp}, {self.typ}, {self.output_chars}, {self.error_chars} )"
-
-    def __eq__(self, other):
-        return all(
-            [
-                self.inp == other.inp,
-                self.typ == other.typ,
-                self.output_chars == other.output_chars,
-                self.error_chars == other.error_chars,
-            ]
-        )
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
+    inp: str
+    is_include: bool
+    output_chars: int = 0
+    error_chars: int = 0
 
 
 class Runner:
@@ -151,39 +51,36 @@ class Runner:
         self.compile_error = ""
         self.output_chars_printed = 0
         self.error_chars_printed = 0
+        self.subs_compiler_cmd = igcc.utils.get_compiler_command(
+            CONFIG, self.args, self.exec_filename
+        )
 
     def do_run(self):
-        read_line = create_read_line_function(self.input_file, config.prompt)
-        subs_compiler_command = get_compiler_command(self.args, self.exec_filename)
-
         while True:
-            inp = read_line(self.input_num + 1)  # 1-indexed
+            inp = igcc.utils.readline_from_stdin(CONFIG.prompt, self.input_num + 1)
             if inp is None:
                 break
 
-            col_inp, run_compiler = igcc.dot_commands.process(inp, self)
+            col_inp, run_compiler = self.process(inp)
 
             if col_inp:
                 if self.input_num < len(self.user_input):
                     self.user_input = self.user_input[: self.input_num]
 
-                if incl_re.match(inp) is None:
-                    typ = UserInput.COMMAND
-                else:
-                    typ = UserInput.INCLUDE
-
-                self.user_input.append(UserInput(inp, typ))
+                self.user_input.append(UserInput(inp, is_include=INCL_RE.match(inp) is not None))
                 self.input_num += 1
 
             if run_compiler:
-                self.compile_error = run_compile(subs_compiler_command, self)
+                self.compile_error = self.run_compile()
 
                 if self.compile_error is not None:
-                    info = "Compile error - type .e to see it OR disregard if multi-line statement(s)\n"
-                    print(colorize(info, "magenta"))
+                    print(
+                        "[red] Compile error - type .e to see it OR disregard if multi-line statement(s)\n [/red]"
+                    )
                     continue
 
-                stdout_data, stderr_data = run_exec(self.exec_filename)
+                # execute the compiled binary
+                stdout_data, stderr_data = igcc.utils.run_exec(self.exec_filename)
 
                 if len(stdout_data) > self.output_chars_printed:
                     new_output = stdout_data[self.output_chars_printed :]
@@ -203,8 +100,6 @@ class Runner:
                     self.error_chars_printed += len_new_error
                     self.user_input[-1].error_chars = len_new_error
 
-            print()  # ensure empty newline between commands
-
     def redo(self):
         if self.input_num >= len(self.user_input):
             return None
@@ -223,71 +118,124 @@ class Runner:
 
         return undone_input.inp
 
+    def get_full_source(self):
+        return SOURCE_CODE.replace("$user_input", self.get_user_commands_string()).replace(
+            "$user_includes", self.get_user_includes_string()
+        )
+
     def get_user_input(self):
         return itertools.islice(self.user_input, 0, self.input_num)
 
-    def get_user_commands(self):
-        return (a.inp for a in filter(lambda a: a.typ == UserInput.COMMAND, self.get_user_input()))
-
-    def get_user_includes(self):
-        return (a.inp for a in filter(lambda a: a.typ == UserInput.INCLUDE, self.get_user_input()))
-
     def get_user_commands_string(self):
-        return "\n".join(self.get_user_commands()) + "\n"
+        user_cmds = (a.inp for a in filter(lambda a: not a.is_include, self.get_user_input()))
+        return "\n".join(user_cmds) + "\n"
 
     def get_user_includes_string(self):
-        return "\n".join(self.get_user_includes()) + "\n"
+        user_includes = (a.inp for a in filter(lambda a: a.is_include, self.get_user_input()))
+        return "\n".join(user_includes) + "\n"
 
+    def run_compile(self):
+        src = self.get_full_source()
 
-def parse_args(argv):
-    parser = argparse.ArgumentParser()
+        compile_process = subprocess.Popen(
+            self.subs_compiler_cmd,
+            stdin=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            encoding="utf8",
+        )
 
-    parser.add_argument(
-        "-I",
-        nargs="+",
-        dest="INCLUDE",
-        help="Add INCLUDE to the list of directories to be searched for header files.",
-        default=list(),
-    )
-    parser.add_argument(
-        "-L",
-        nargs="+",
-        dest="LIBDIR",
-        help="Add LIBDIR to the list of directories to be searched for library files.",
-    )
-    parser.add_argument(
-        "-l",
-        nargs="+",
-        dest="LIB",
-        help="Search the library LIB when linking.",
-    )
+        stdout_data, stderr_data = compile_process.communicate(input=src)
 
-    args = parser.parse_args(argv)
+        if compile_process.returncode == 0:
+            return None
 
-    # make default asset dir available as include dir, as it defines `boilerplate.h`
-    args.INCLUDE.insert(0, str(get_asset_dir()))
+        out = ""
 
-    return args
+        if stdout_data is not None:
+            out += stdout_data
+
+        if stderr_data is not None:
+            out += stderr_data
+
+        if out == "":
+            return "Unknown compile error - compiler did not write any output."
+
+        return out
+
+    # DOT COMMANDS
+    # TODO: maybe extract separately or make the return values more explicit
+
+    def process(self, inp):
+        r = self.dot_commands.get(inp)
+
+        if r is not None:
+            desc, func = r
+            return func(self)
+
+        return True, True
+
+    def dot_e(self):
+        print(self.compile_error)
+        return False, False
+
+    def dot_q(self):
+        raise IGCCQuitException()
+
+    def dot_l(self):
+        print(f"{self.get_user_includes_string()}\n{self.get_user_commands_string()}")
+        return False, False
+
+    def dot_L(self):
+        print(self.get_full_source())
+        return False, False
+
+    def dot_r(self):
+        redone_line = self.redo()
+        if redone_line is not None:
+            print(f"Redone [{redone_line}]")
+            return False, True
+        else:
+            print("Nothing to redo")
+            return False, False
+
+    def dot_u(self):
+        undone_line = self.undo()
+        if undone_line is not None:
+            print(f"Undone [{undone_line}]")
+        else:
+            print("Nothing to undo")
+
+        return False, False
+
+    def dot_h(self):
+        for cmd in sorted(self.dot_commands.keys()):
+            print(cmd, self.dot_commands[cmd][0])
+
+        return False, False
+
+    dot_commands = {
+        ".h": ("Show this help message", dot_h),
+        ".e": ("Show the last compile errors/warnings", dot_e),
+        ".l": ("List the code you have entered", dot_l),
+        ".L": ("List the whole program as given to the compiler", dot_L),
+        ".r": ("Redo undone command", dot_r),
+        ".u": ("Undo previous command", dot_u),
+        ".q": ("Quit", dot_q),
+    }
 
 
 # ENTRYPOINT
-def repl():
+def repl() -> None:
     exec_filename = None
 
     try:
         try:
-            args = parse_args(sys.argv[1:])
-
-            exec_filename = Path(get_tmp_filename())
-            ret = "normal"
-
+            args = igcc.utils.parse_args(sys.argv[1:])
+            exec_filename = igcc.utils.get_tmp_filename()
             Runner(args, input_file=None, exec_filename=exec_filename).do_run()
-
-        except (igcc.dot_commands.IGCCQuitException, KeyboardInterrupt):
-            ret = "quit"
+        except (IGCCQuitException, KeyboardInterrupt):
+            pass
 
     finally:
         if exec_filename is not None and exec_filename.exists():
             exec_filename.unlink()
-
-    return ret
