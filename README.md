@@ -80,6 +80,7 @@ $ igcc
 ```
 
 Multi-line input is supported (check `multiline_marker` from config).
+The benefit of this is avoiding multiple compiler calls.
 
 ```
 $ igcc
