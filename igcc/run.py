@@ -63,10 +63,7 @@ class Runner:
             if inp is None:
                 break
 
-            # input is joined when sent to the compiler
-            # to avoid repeated calls to the compiler for multiline
-            # however, each line (UserInput) is accounted for separately
-            col_inp, run_compiler = self.process("\n".join(inp))
+            col_inp, run_compiler = self.check_input_type("\n".join(inp))
 
             if col_inp:
                 if self.input_num < len(self.user_input):
@@ -80,7 +77,7 @@ class Runner:
                 self.compile_error = self.run_compile()
 
                 if self.compile_error is not None:
-                    print("[red] Compile error - type .e to see it\n [/red]")
+                    print("[white on red] Compile error - type .e to see it\n")
                     continue
 
                 # execute the compiled binary
@@ -123,9 +120,13 @@ class Runner:
         return undone_input.inp
 
     def get_full_source(self):
-        return SOURCE_CODE.replace("$user_input", self.get_user_commands_string()).replace(
-            "$user_includes", self.get_user_includes_string()
+        # fmt: off
+        return (
+            SOURCE_CODE
+            .replace("$user_input", self.get_user_commands_string())
+            .replace("$user_includes", self.get_user_includes_string())
         )
+        # fmt: on
 
     def get_user_input(self):
         return itertools.islice(self.user_input, 0, self.input_num)
@@ -169,24 +170,33 @@ class Runner:
     # DOT COMMANDS
     # TODO: maybe extract separately or make the return values more explicit
 
-    def process(self, inp):
-        r = self.dot_commands.get(inp)
+    def check_input_type(self, inp):
+        if inp.startswith("."):
+            if inp not in self.dot_commands:
+                print(f"[white on red]Unknown command `{inp}`. Available commands:")
+                return self.dot_h()
 
-        if r is not None:
-            desc, func = r
+            _, func = self.dot_commands[inp]
             return func(self)
 
         return True, True
 
     def dot_e(self):
-        print(self.compile_error)
+        if not self.compile_error:
+            print("[white on green]No compile errors")
+        else:
+            print(self.compile_error)
         return False, False
 
     def dot_q(self):
         raise IGCCQuitException()
 
     def dot_l(self):
-        print(f"{self.get_user_includes_string()}\n{self.get_user_commands_string()}")
+        code = f"{self.get_user_includes_string()}\n{self.get_user_commands_string()}"
+        if not code.strip():
+            print("[black on white]No code entered yet")
+        else:
+            print(code)
         return False, False
 
     def dot_L(self):
@@ -196,24 +206,24 @@ class Runner:
     def dot_r(self):
         redone_line = self.redo()
         if redone_line is not None:
-            print(f"Redone [{redone_line}]")
+            print(f"[black on white]Redone [{redone_line}]")
             return False, True
-        else:
-            print("Nothing to redo")
-            return False, False
+
+        print("[black on white]Nothing to redo")
+        return False, False
 
     def dot_u(self):
         undone_line = self.undo()
         if undone_line is not None:
-            print(f"Undone [{undone_line}]")
+            print(f"[black on white]Undone [{undone_line}]")
         else:
-            print("Nothing to undo")
+            print("[black on white]Nothing to undo")
 
         return False, False
 
     def dot_h(self):
-        for cmd in sorted(self.dot_commands.keys()):
-            print(cmd, self.dot_commands[cmd][0])
+        for dot, (desc, _) in self.dot_commands.items():
+            print(f"[bold][blue]{dot}[/blue][/bold]  {desc}")
 
         return False, False
 
