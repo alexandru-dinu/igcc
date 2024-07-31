@@ -12,8 +12,7 @@
 - A default [`boilerplate.h`](https://github.com/alexandru-dinu/igcc/blob/main/igcc/assets/boilerplate.h) header is included
 - For configuration (mainly related to compiling) see [`config.yaml`](https://github.com/alexandru-dinu/igcc/blob/main/igcc/assets/config.yaml)
 
-## Running
-
+## Getting started
 Optionally, first create a new python virtual environment, then:
 ```console
 pip3 install git+https://github.com/alexandru-dinu/igcc.git
@@ -52,36 +51,38 @@ Type `.h` for help:
 .u Undo previous command
 ```
 
-## Usage
-
-Simple usage:
-
+## Examples
+`std` namespace is not available by default, but you can explicitly add it:
 ```
 $ igcc
-[  1]> int a = 5;
-[  2]> a += 2;
-[  3]> cout << a << endl;
+[1]> int a = 5;
+[2]> a += 2;
+[3]> using namespace std;
+[4]> cout << a << endl;
 7
-[  4]> --a;
-[  5]> cout << a << endl;
-6
+
+[5]> int b = 17;
+[6]> a *= b;
+[7]> cout << a << ", " << b << endl;
+119, 17
+
+[8]> .L
+#include "boilerplate.h"
+using namespace std;
+
+int main(void) {
+    int a = 5;
+    a += 2;
+    cout << a << endl;
+    int b = 17;
+    a *= b;
+    cout << a << ", " << b << endl;
+
+    return 0;
+}
 ```
 
-Include header files:
-
-```
-$ igcc
-[  1]> #include <vector>
-[  2]> vector<int> xs = {1,2,3};
-[  3]> xs.push_back(17);
-[  4]> xs.pop_back();
-[  5]> printf("%u", xs.size());
-3
-```
-
-Multi-line input is supported (check `multiline_marker` from config).
-The benefit of this is avoiding multiple compiler calls.
-
+**Multi-line input** is supported (check `multiline_marker` from config). The benefit is avoiding multiple compiler calls.
 ```
 $ igcc
 [1]> .m
@@ -93,8 +94,21 @@ $ igcc
 0 1 2 3 4 5 6 7 8 9
 ```
 
-Libs can be linked:
+You can include headers:
+```
+$ igcc
+[1]> #include <vector>
+[2]> std::vector<int> xs{1,2,3};
+[3]> xs.push_back(17);
+[4]> .m
+... for (auto x : xs) {
+...   std::cout << x << " ";
+... }
+... .m
+1 2 3 17
+```
 
+Libs can be linked:
 ```
 $ igcc -lpthread
 [  1]> #include <pthread.h>
@@ -104,6 +118,66 @@ $ igcc -lpthread
 [  5]> int ret = pthread_create(&thr, NULL, print_msg, (void*) msg); pthread_join(thr, NULL);
 Hello, World!
 ```
+
+You can also **undo** commands:
+```
+$ igcc
+[1]> int x = 2
+ Compile error - type .e to see it
+
+[2]> .e
+<stdin>: In function ‘int main()’:
+<stdin>:7:5: error: expected ‘,’ or ‘;’ before ‘return’
+<stdin>:5:9: warning: unused variable ‘x’ [-Wunused-variable]
+
+[2]> .u
+Undone
+[1]> int x = 2;
+[2]> .L
+#include "boilerplate.h"
+
+
+int main(void) {
+    int x = 2;
+
+    return 0;
+}
+```
+
+... or **redo** previously undone commands:
+```
+❯ igcc
+[1]> int x = 2;
+[2]> std::cout << x;
+2
+[3]> .u
+Undone
+[2]> .L
+#include "boilerplate.h"
+
+
+int main(void) {
+    int x = 2;
+
+    return 0;
+}
+[2]> .r
+Redone
+2
+[3]> .L
+#include "boilerplate.h"
+
+
+int main(void) {
+    int x = 2;
+  std::cout << x;
+
+    return 0;
+}
+```
+
+## Future work
+See https://github.com/alexandru-dinu/igcc/issues
 
 ## Links
 - [IGCC home page](http://www.artificialworlds.net/wiki/IGCC/IGCC)
