@@ -82,10 +82,10 @@ class Runner:
                     continue
 
                 # execute the compiled binary
-                stdout_data, stderr_data = igcc.utils.run_exec(self.exec_filename)
+                stdout, stderr = igcc.utils.run_exec(self.exec_filename)
 
-                if len(stdout_data) > self.output_chars_printed:
-                    new_output = stdout_data[self.output_chars_printed :]
+                if len(stdout) > self.output_chars_printed:
+                    new_output = stdout[self.output_chars_printed :]
                     len_new_output = len(new_output)
 
                     print(new_output.decode("utf8"))
@@ -93,8 +93,8 @@ class Runner:
                     self.output_chars_printed += len_new_output
                     self.user_input[-1].output_chars = len_new_output
 
-                if len(stderr_data) > self.error_chars_printed:
-                    new_error = stderr_data[self.error_chars_printed :]
+                if len(stderr) > self.error_chars_printed:
+                    new_error = stderr[self.error_chars_printed :]
                     len_new_error = len(new_error)
 
                     print(new_error.decode("utf8"))
