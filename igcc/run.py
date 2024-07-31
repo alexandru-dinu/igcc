@@ -17,7 +17,8 @@ readline.parse_and_bind("tab: complete")
 with open(igcc.utils.get_asset_dir() / "config.yaml") as fp:
     CONFIG = argparse.Namespace(**yaml.safe_load(fp))
 
-INCL_RE = re.compile(r"\s*#\s*include\s")
+# Matches `include` directives and `using` statements
+PREAMBLE_RE = re.compile(r"\s*(#\s*include)|(using)\s")
 
 SOURCE_CODE = """
 #include "boilerplate.h"
@@ -69,7 +70,7 @@ class Runner:
                 if self.input_num < len(self.user_input):
                     self.user_input = self.user_input[: self.input_num]
 
-                new_inp = [UserInput(x, is_include=INCL_RE.match(x) is not None) for x in inp]
+                new_inp = [UserInput(x, is_include=PREAMBLE_RE.match(x) is not None) for x in inp]
                 self.user_input += new_inp
                 self.input_num += len(new_inp)
 
