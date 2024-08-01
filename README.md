@@ -16,7 +16,7 @@ Multi-line (block) input is supported, so you can add multiple lines in one go a
 
 You can include various header files. For convenience, a default header is included: [`boilerplate.h`](https://github.com/alexandru-dinu/igcc/blob/main/igcc/assets/boilerplate.h). Also, `using namespace std;` is not available by default, but you can explicitly add it (example below).
 
-Various aspects of `igcc` can be configures, see [`config.yaml`](https://github.com/alexandru-dinu/igcc/blob/main/igcc/assets/config.yaml).
+Various aspects of `igcc` can be configured, see [`config.yaml`](https://github.com/alexandru-dinu/igcc/blob/main/igcc/assets/config.yaml).
 
 ## Getting started
 The easiest way to get started is to use [pipx](https://pipx.pypa.io/stable/):
