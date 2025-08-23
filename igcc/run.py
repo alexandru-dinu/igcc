@@ -1,7 +1,10 @@
 import argparse
 import itertools
 import re
-import readline
+try:
+    import readline  # Linux/macOS
+except ImportError:
+    import pyreadline3 as readline  # Windows
 import subprocess
 import sys
 from dataclasses import dataclass
@@ -11,8 +14,8 @@ from rich import print
 
 import igcc.utils
 
-readline.parse_and_bind("tab: complete")
-
+if hasattr(readline, "parse_and_bind"):
+    readline.parse_and_bind("tab: complete") # for Linux/macOS only
 
 with open(igcc.utils.get_asset_dir() / "config.yaml") as fp:
     CONFIG = argparse.Namespace(**yaml.safe_load(fp))
