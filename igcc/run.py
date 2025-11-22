@@ -1,6 +1,7 @@
 import argparse
 import itertools
 import re
+
 try:
     import readline  # Linux/macOS
 except ImportError:
