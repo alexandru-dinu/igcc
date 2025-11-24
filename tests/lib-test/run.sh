@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-IGCC="igcc"
+IGCC="uv run igcc"
 
 function test_lib_dir() {
 	# make static lib

@@ -16,7 +16,7 @@ from rich import print
 import igcc.utils
 
 if hasattr(readline, "parse_and_bind"):
-    readline.parse_and_bind("tab: complete") # for Linux/macOS only
+    readline.parse_and_bind("tab: complete")  # for Linux/macOS only
 
 with open(igcc.utils.get_asset_dir() / "config.yaml") as fp:
     CONFIG = argparse.Namespace(**yaml.safe_load(fp))
