@@ -6,10 +6,13 @@ try:
     import readline  # Linux/macOS
 except ImportError:
     import pyreadline3 as readline  # Windows
+
 import subprocess
 import sys
+import textwrap
 from dataclasses import dataclass
 
+import jinja2
 import yaml
 from rich import print
 
@@ -24,17 +27,21 @@ with open(igcc.utils.get_asset_dir() / "config.yaml") as fp:
 # Matches `include` directives and `using` statements
 PREAMBLE_RE = re.compile(r"\s*(#\s*include)|(using)\s")
 
-SOURCE_CODE = """
-#include "boilerplate.h"
-$user_includes
-int main(void) {
-    $user_input
-    return 0;
-}
-""".strip()
+SOURCE_CODE_TEMPLATE = jinja2.Environment().from_string(
+    textwrap.dedent(
+        """\
+        #include "boilerplate.h"
+        {{ user_includes }}
+        int main(void) {
+            {{ user_input }}
+            return 0;
+        }
+        """
+    )
+)
 
 
-class IGCCQuitException(Exception):
+class IGCCQuitError(Exception):
     pass
 
 
@@ -127,13 +134,10 @@ class Runner:
         return undone_input.inp
 
     def get_full_source(self):
-        # fmt: off
-        return (
-            SOURCE_CODE
-            .replace("$user_input", self.get_user_commands_string())
-            .replace("$user_includes", self.get_user_includes_string())
+        return SOURCE_CODE_TEMPLATE.render(
+            user_includes=self.get_user_includes_string(),
+            user_input=self.get_user_commands_string(),
         )
-        # fmt: on
 
     def get_user_input(self):
         return itertools.islice(self.user_input, 0, self.input_num)
@@ -196,7 +200,7 @@ class Runner:
         return False, False
 
     def dot_q(self):
-        raise IGCCQuitException()
+        raise IGCCQuitError()
 
     def dot_l(self):
         code = f"{self.get_user_includes_string()}\n{self.get_user_commands_string()}"
@@ -254,7 +258,7 @@ def repl() -> None:
             args = igcc.utils.parse_args(sys.argv[1:])
             exec_filename = igcc.utils.get_tmp_filename()
             Runner(args, input_file=None, exec_filename=exec_filename).do_run()
-        except (IGCCQuitException, KeyboardInterrupt):
+        except (IGCCQuitError, KeyboardInterrupt):
             pass
 
     finally:
