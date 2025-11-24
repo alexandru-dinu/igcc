@@ -12,5 +12,8 @@ format:
 		&& uv tool run isort $(SRC) \
 		&& uv tool run black --line-length 100 $(SRC)
 
+readme:
+	@uv tool run mdup -i README.md
+
 test:
 	@for f in `ls tests`; do (cd tests/$$f && ./run.sh); done

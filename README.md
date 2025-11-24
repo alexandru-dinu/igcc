@@ -34,28 +34,26 @@ cd igcc
 uv sync
 ```
 
-Now you can run the REPL with:
-```
-igcc
-```
-
 Available args:
+<!-- MDUP:BEG uv run igcc --help -->
 ```
-$ igcc --help
-usage: igcc [-h] [-I INCLUDE [INCLUDE ...]] [-L LIBDIR [LIBDIR ...]] [-l LIB [LIB ...]]
+usage: igcc [-h] [-I INCLUDE [INCLUDE ...]] [-L LIBDIR [LIBDIR ...]]
+            [-l LIB [LIB ...]]
 
 options:
   -h, --help            show this help message and exit
   -I INCLUDE [INCLUDE ...]
-                        Add INCLUDE to the list of directories to be searched for header files.
+                        Add INCLUDE to the list of directories to be searched
+                        for header files.
   -L LIBDIR [LIBDIR ...]
-                        Add LIBDIR to the list of directories to be searched for library files.
+                        Add LIBDIR to the list of directories to be searched
+                        for library files.
   -l LIB [LIB ...]      Search the library LIB when linking.
 ```
+<!-- MDUP:END -->
 
 The code will be compiled with GCC (`g++`) and the results (if any) will be displayed.
 Type `.h` for help:
-
 ```
 $ igcc
 [1]> .h
