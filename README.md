@@ -23,7 +23,16 @@ The easiest way to get started is to use [pipx](https://pipx.pypa.io/stable/):
 ```
 pipx install git+https://github.com/alexandru-dinu/igcc.git
 ```
-Alternatively, you can also just use `pip` (a dedicated virtual environment is recommended).
+Alternatively, you can also use `uv`:
+```
+uv tool run git+https://github.com/alexandru-dinu/igcc
+```
+And for dev:
+```
+git clone https://github.com/alexandru-dinu/igcc.git
+cd igcc
+uv sync
+```
 
 Now you can run the REPL with:
 ```
