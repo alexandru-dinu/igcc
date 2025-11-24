@@ -1,5 +1,5 @@
 #include <iostream>
-#include <bits/stdc++.h>
+#include <vector>
 
 template <typename T>
 void print_vector(const std::vector<T>& xs) {
