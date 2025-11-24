@@ -10,7 +10,11 @@ description = "Interactive GCC - C/C++ REPL"
 readme = "README.md"
 requires-python = ">=3.10"
 
-dependencies = ["PyYAML", "rich"]
+dependencies = [
+    "PyYAML",
+    "rich",
+    "pyreadline3; platform_system=='Windows'",
+]
 
 [project.optional-dependencies]
 dev = ["black", "isort", "autoflake", "ruff"]
